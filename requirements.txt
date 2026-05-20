@@ -1,4 +1,5 @@
 yfinance>=0.2.40
 pandas>=2.0
 numpy>=1.24
-plotly>=5.18
+matplotlib>=3.7
+plotly>=5.18    # 任意。report.html (ローカル閲覧用) 生成にのみ使用

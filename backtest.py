@@ -25,11 +25,35 @@ from datetime import datetime
 from itertools import combinations
 from pathlib import Path
 
+import matplotlib
+matplotlib.use("Agg")  # non-interactive backend; safe on Linux/Windows runners
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from matplotlib import font_manager
+
+# Pick the first available Japanese-capable font so labels render correctly.
+_JP_CANDIDATES = [
+    "Meiryo", "MS Gothic", "Yu Gothic", "Hiragino Sans",
+    "Noto Sans CJK JP", "IPAexGothic", "IPAPGothic",
+    "VL Gothic", "TakaoPGothic", "DejaVu Sans",
+]
+_available_fonts = {f.name for f in font_manager.fontManager.ttflist}
+for _fname in _JP_CANDIDATES:
+    if _fname in _available_fonts:
+        matplotlib.rcParams["font.family"] = _fname
+        break
+matplotlib.rcParams["axes.unicode_minus"] = False
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
-import plotly.io as pio
 import yfinance as yf
+
+# plotly is optional — only needed for the auxiliary HTML output.
+try:
+    import plotly.graph_objects as go
+    import plotly.io as pio
+    HAS_PLOTLY = True
+except ImportError:  # pragma: no cover
+    HAS_PLOTLY = False
 
 from indicators import compute_indicators, define_signals
 
@@ -95,8 +119,15 @@ def simulate(signal: np.ndarray,
              closes: np.ndarray,
              dates: np.ndarray,
              tp_pct: int,
-             max_hold: int = MAX_HOLD) -> list[Trade]:
-    """Single-position simulation."""
+             max_hold: int = MAX_HOLD,
+             entry_mask: np.ndarray | None = None) -> list[Trade]:
+    """Single-position simulation.
+
+    entry_mask: optional boolean array. When provided, a new entry is only
+        allowed on day i if entry_mask[i] is True. Exits and ongoing position
+        management still run for the full date range — this lets us measure
+        IS-only signals while allowing exits to play out naturally into OOS.
+    """
     trades: list[Trade] = []
     n = len(signal)
     in_pos = False
@@ -105,6 +136,8 @@ def simulate(signal: np.ndarray,
     mfe = 0.0
     mae = 0.0
     tp_mult = 1.0 + tp_pct / 100.0
+    if entry_mask is None:
+        entry_mask = np.ones(n, dtype=bool)
 
     for i in range(n):
         if in_pos:
@@ -151,7 +184,11 @@ def simulate(signal: np.ndarray,
                 in_pos = False
         else:
             # Try to open a position the day after a signal.
-            if signal[i] and i + 1 < n:
+            # `signal[i]` is the trigger close; entry on next bar's open.
+            # `entry_mask[i]` gates whether new entries are *allowed* here
+            # (used to restrict IS-only or OOS-only entries while keeping
+            #  exits naturally playing out on the full timeline).
+            if signal[i] and entry_mask[i] and i + 1 < n:
                 entry_idx = i + 1
                 entry_price = opens[entry_idx]
                 mfe = 0.0
@@ -214,8 +251,16 @@ def aggregate(trades: list[Trade], tp_pct: int,
 # ----------------------------- Combo search -------------------------------- #
 
 
-def run_all(df: pd.DataFrame, label: str = "全期間") -> list[StratStats]:
-    """Run all single/2-way/3-way combos on the supplied dataframe."""
+def run_all(df: pd.DataFrame,
+            entry_mask: np.ndarray | None = None,
+            label: str = "全期間") -> list[StratStats]:
+    """Run all single/2-way/3-way combos on the supplied dataframe.
+
+    `entry_mask` restricts where new positions are *opened*. Exits and
+    intra-trade tracking use the full date range so trades that start near
+    the mask boundary can still play out naturally. This is the standard
+    way to do IS/OOS partitioning without artificial truncation.
+    """
     sigs = define_signals(df)
     names = list(sigs.keys())
 
@@ -235,11 +280,16 @@ def run_all(df: pd.DataFrame, label: str = "全期間") -> list[StratStats]:
         sig = sigs[combo[0]].to_numpy()
         for nm in combo[1:]:
             sig = sig & sigs[nm].to_numpy()
-        n_raw = int(sig.sum())
+        # Count of triggers within the allowed entry window for the threshold.
+        if entry_mask is not None:
+            n_raw = int((sig & entry_mask).sum())
+        else:
+            n_raw = int(sig.sum())
         if n_raw < MIN_SIGNALS:
             continue
         for tp in TP_LEVELS:
-            trades = simulate(sig, opens, highs, lows, closes, dates, tp)
+            trades = simulate(sig, opens, highs, lows, closes, dates, tp,
+                              entry_mask=entry_mask)
             s = aggregate(trades, tp, combo, n_raw)
             if s:
                 out.append(s)
@@ -369,6 +419,357 @@ def to_dataframe(results: list[StratStats]) -> pd.DataFrame:
             "expected_value": s.expected_value,
         })
     return pd.DataFrame(rows)
+
+
+# ----------------------------- Matplotlib figures -------------------------- #
+
+
+# Light, GitHub-friendly style (looks readable on both light & dark mobile UIs
+# because the PNG carries its own background).
+_FIG_STYLE = {
+    "figure.facecolor": "white",
+    "axes.facecolor": "white",
+    "axes.edgecolor": "#444",
+    "axes.labelcolor": "#222",
+    "axes.titlecolor": "#222",
+    "xtick.color": "#444",
+    "ytick.color": "#444",
+    "axes.grid": True,
+    "grid.color": "#e0e0e0",
+    "grid.linewidth": 0.8,
+    "font.size": 11,
+    "axes.titlesize": 13,
+    "axes.titleweight": "bold",
+    "legend.frameon": False,
+    "figure.dpi": 120,
+}
+
+
+def _shorten_combo(combo: tuple[str, ...], width: int = 36) -> str:
+    s = " + ".join(combo)
+    return s if len(s) <= width else s[: width - 1] + "…"
+
+
+def save_equity_png(top_results: list[StratStats],
+                    df_data: pd.DataFrame,
+                    out_path: Path) -> None:
+    """Equity curves of top strategies + Buy&Hold reference."""
+    with plt.rc_context(_FIG_STYLE):
+        fig, ax = plt.subplots(figsize=(10, 5.2))
+        dates_all = df_data.index.to_numpy()
+
+        # Buy & Hold
+        bnh = (df_data["Close"] / df_data["Close"].iloc[0]).to_numpy()
+        ax.plot(dates_all, bnh, label="Buy & Hold", color="#777",
+                linestyle="--", linewidth=1.4)
+
+        # Strategy curves
+        colors = plt.get_cmap("tab10").colors
+        for i, s in enumerate(top_results):
+            _, eq = equity_curve(s.trades, dates_all)
+            label = f"{_shorten_combo(s.combo, 30)} (+{s.tp_pct}%, hit {s.hit_rate:.0f}%)"
+            ax.plot(dates_all, eq, label=label, color=colors[i % len(colors)],
+                    linewidth=1.8)
+
+        ax.set_title("エクイティカーブ (1倍スタート、複利)")
+        ax.set_ylabel("エクイティ倍率")
+        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
+        for label in ax.get_xticklabels():
+            label.set_rotation(0)
+        ax.legend(loc="upper left", fontsize=9, ncol=1)
+        ax.axhline(1.0, color="#bbb", linewidth=0.6)
+        fig.tight_layout()
+        fig.savefig(out_path, bbox_inches="tight")
+        plt.close(fig)
+
+
+def save_return_histogram_png(top_results: list[StratStats], out_path: Path) -> None:
+    wins, losses = [], []
+    for s in top_results:
+        for t in s.trades:
+            (wins if t.hit_tp else losses).append(t.return_pct)
+
+    with plt.rc_context(_FIG_STYLE):
+        fig, ax = plt.subplots(figsize=(9, 4.2))
+        bins = np.linspace(-25, 30, 22)
+        ax.hist(wins, bins=bins, color="#2e8b57", alpha=0.75, label=f"利確 (n={len(wins)})")
+        ax.hist(losses, bins=bins, color="#c0392b", alpha=0.75, label=f"失敗 (n={len(losses)})")
+        ax.axvline(0, color="#777", linewidth=0.8)
+        ax.set_title("上位戦略の全トレード・リターン分布")
+        ax.set_xlabel("リターン (%)")
+        ax.set_ylabel("回数")
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(out_path, bbox_inches="tight")
+        plt.close(fig)
+
+
+def save_signal_scatter_png(df_is: pd.DataFrame, out_path: Path) -> None:
+    with plt.rc_context(_FIG_STYLE):
+        fig, ax = plt.subplots(figsize=(9, 4.6))
+        colors = {5: "#1f77b4", 10: "#2ca02c", 15: "#ff7f0e", 20: "#d62728"}
+        for tp in TP_LEVELS:
+            sub = df_is[df_is["tp_pct"] == tp]
+            ax.scatter(sub["n_trades"], sub["expected_value"],
+                       s=22, alpha=0.55, color=colors[tp], label=f"TP +{tp}%")
+        ax.axhline(0, color="#888", linewidth=0.6)
+        ax.set_title("シグナル回数 × 期待値 (TP水準別, In-Sample)")
+        ax.set_xlabel("トレード回数 (n_trades)")
+        ax.set_ylabel("期待値 (%)")
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(out_path, bbox_inches="tight")
+        plt.close(fig)
+
+
+def save_drawdown_overview_png(df_data: pd.DataFrame, out_path: Path) -> None:
+    """Show Nikkei close + 1y rolling drawdown — context for the strategy era."""
+    with plt.rc_context(_FIG_STYLE):
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 5.6),
+                                       sharex=True, gridspec_kw={"height_ratios": [2, 1]})
+        ax1.plot(df_data.index, df_data["Close"], color="#1f77b4", linewidth=1.4)
+        ax1.set_ylabel("日経平均 (円)")
+        ax1.set_title("日経平均 5年推移 と 1年高値からのドローダウン")
+        ax2.fill_between(df_data.index, df_data["DRAWDOWN"], 0,
+                         color="#c0392b", alpha=0.5)
+        ax2.axhline(-10, color="#000", linewidth=0.6, linestyle="--")
+        ax2.set_ylabel("DD (%)")
+        ax2.xaxis.set_major_locator(mdates.AutoDateLocator())
+        ax2.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m"))
+        fig.tight_layout()
+        fig.savefig(out_path, bbox_inches="tight")
+        plt.close(fig)
+
+
+# ----------------------------- Markdown report ----------------------------- #
+
+
+def _md_table(headers: list[str], rows: list[list[str]],
+              aligns: list[str] | None = None) -> str:
+    aligns = aligns or ["right"] * len(headers)
+    sep = []
+    for a in aligns:
+        if a == "left":
+            sep.append(":---")
+        elif a == "right":
+            sep.append("---:")
+        else:
+            sep.append(":---:")
+    out = ["| " + " | ".join(headers) + " |",
+           "| " + " | ".join(sep) + " |"]
+    for r in rows:
+        out.append("| " + " | ".join(r) + " |")
+    return "\n".join(out)
+
+
+def build_markdown(df_is: pd.DataFrame,
+                   oos_lookup: dict,
+                   bnh: dict,
+                   always_buy_stats: dict,
+                   day_forward_stats: dict,
+                   df_data: pd.DataFrame,
+                   generated_at: str,
+                   oos_start) -> str:
+    # --- Top per TP ---
+    top_per_tp_rows = []
+    for tp in TP_LEVELS:
+        sub = df_is[df_is["tp_pct"] == tp]
+        if sub.empty:
+            continue
+        top = sub.iloc[0]
+        oos = oos_lookup.get((top["combo"], tp), None)
+        oos_str = (f"{oos['hit_rate']:.1f}% ({oos['n_trades']}回)"
+                   if oos and oos["n_trades"] > 0 else "—")
+        top_per_tp_rows.append([
+            f"**+{tp}%**",
+            f"`{top['combo']}`",
+            f"{top['hit_rate']:.1f}%",
+            f"{int(top['n_trades'])}",
+            f"{top['expected_value']:+.2f}%",
+            oos_str,
+        ])
+
+    # --- Benchmarks ---
+    bnh_str = (f"**+{bnh['return_pct']:.1f}%** (年率 +{bnh['annualized_pct']:.1f}%)"
+               if bnh["return_pct"] >= 0 else
+               f"**{bnh['return_pct']:.1f}%** (年率 {bnh['annualized_pct']:.1f}%)")
+    rand_rows = []
+    for tp in TP_LEVELS:
+        df_st = day_forward_stats[tp]
+        rand_rows.append([
+            f"+{tp}%",
+            f"**{df_st['hit_rate']:.1f}%**",
+            f"{df_st['avg_days_to_tp']:.0f}日" if df_st["avg_days_to_tp"] else "—",
+            f"{df_st['avg_return']:+.2f}%",
+            f"{df_st['n_entries']}",
+        ])
+
+    # --- Ranking ---
+    ranking_rows = []
+    for _, row in df_is.head(30).iterrows():
+        oos = oos_lookup.get((row["combo"], int(row["tp_pct"])), None)
+        oos_hit = f"{oos['hit_rate']:.0f}%" if oos and oos["n_trades"] > 0 else "—"
+        oos_n = f"{oos['n_trades']}" if oos else "—"
+        ranking_rows.append([
+            f"`{row['combo']}`",
+            f"+{int(row['tp_pct'])}%",
+            f"{int(row['n_trades'])}",
+            f"{row['hit_rate']:.0f}%",
+            f"{row['avg_days_to_tp']:.0f}日" if pd.notna(row["avg_days_to_tp"]) else "—",
+            f"{row['avg_win_return']:+.1f}%",
+            f"{row['failure_mean']:+.1f}%",
+            f"{row['avg_mfe']:+.1f}%",
+            f"{row['avg_mae']:+.1f}%",
+            f"**{row['expected_value']:+.2f}%**",
+            oos_hit,
+            oos_n,
+        ])
+
+    # --- Top strategy details ---
+    top_n_detail = 5
+    detail_blocks = []
+    for i, (_, row) in enumerate(df_is.head(top_n_detail).iterrows(), start=1):
+        oos = oos_lookup.get((row["combo"], int(row["tp_pct"])), None)
+        if oos and oos["n_trades"] > 0:
+            oos_text = (f"直近1年で発生 **{oos['n_trades']}回**、"
+                        f"到達率 **{oos['hit_rate']:.1f}%**、"
+                        f"期待値 **{oos['expected_value']:+.2f}%**")
+        elif oos and oos["n_trades"] == 0:
+            oos_text = "**直近1年では発生なし**（OOS検証不能）"
+        else:
+            oos_text = "—"
+        block = f"""### {i}. `{row['combo']}` × TP +{int(row['tp_pct'])}%
+
+- トレード回数: **{int(row['n_trades'])}回** (5年で発生 {int(row['n_signals_raw'])}回検出)
+- 利確到達率: **{row['hit_rate']:.1f}%**
+- 平均到達日数: **{row['avg_days_to_tp']:.0f}営業日** （≒ {row['avg_days_to_tp']/21:.1f}ヶ月）
+- 勝ち平均リターン: **{row['avg_win_return']:+.2f}%**
+- 失敗時平均リターン: **{row['failure_mean']:+.2f}%** (中央値 {row['failure_median']:+.2f}%)
+- 平均MFE (含み益MAX): {row['avg_mfe']:+.2f}%
+- 平均MAE (含み損MAX): {row['avg_mae']:+.2f}%
+- **期待値: {row['expected_value']:+.2f}%**
+- OOS検証: {oos_text}
+"""
+        detail_blocks.append(block)
+
+    # --- Assemble ---
+    md = f"""# 📊 日経225 シグナル・バックテスト レポート
+
+> **生成日時**: {generated_at} UTC
+> **データ**: yfinance `^N225` 日足 5年 ({df_data.index[0].date()} – {df_data.index[-1].date()}, {len(df_data)}本)
+> **OOS分割**: 直近約252営業日 (`{oos_start}`以降) を Out-of-Sample に切り出し、残りを In-Sample
+> **シグナル探索**: 20条件から単一 + 2-way + 3-way AND = **1,350通り**、5年で発生≥20回のみ集計
+> **利確水準**: +5% / +10% / +15% / +20%、最大保有 **250営業日** で強制決済
+
+## ⚠️ 重要な但し書き（必ず読む）
+
+- 5年バックテストは **特定相場レジームに偏ります**。下の Buy&Hold が +112%/年率+16% なのが象徴で、直近の上昇トレンドが「どんなシグナルでも勝てて見える」状況を作っています。
+- 1,350通りの多重比較で **偽陽性が出やすい** 構造です。In-Sample 期待値が高くても、OOS 列が空 or 大きく下がる戦略は過剰適合の疑い。
+- **手数料・税・配当・スリッページは未考慮の理論値です**（指数そのまま）。
+- 過去のパフォーマンスは将来を保証しません。
+
+## ① 結論
+
+In-Sample で期待値が最も高かったシグナル組み合わせ（OOS = 直近1年の同戦略再現）:
+
+{_md_table(
+    ["TP", "ベストシグナル", "到達率", "回数", "期待値", "OOS到達率"],
+    top_per_tp_rows,
+    aligns=["right", "left", "right", "right", "right", "right"],
+)}
+
+ほとんどの戦略は **n=3〜10 程度の小サンプル** で、統計的信頼性は弱め。
+**OOS列が「—」または激減している戦略 = 過剰適合の疑い** として扱ってください。
+
+## ② ベンチマーク
+
+### Buy & Hold (5年)
+
+{bnh_str}
+
+### ランダム1日エントリー（全{day_forward_stats[5]['n_entries']}日を対象に、翌日寄付エントリー → TP到達か250日経過まで）
+
+{_md_table(
+    ["TP", "到達率", "平均到達", "平均リターン", "n"],
+    rand_rows,
+    aligns=["right", "right", "right", "right", "right"],
+)}
+
+→ **「直近5年は、ランダムにいつ買っても20%上昇する確率が約60%」**。
+シグナルがこの基準を有意に上回るかが、各戦略を評価する目線。
+
+## ③ ランキング (期待値順 上位30件)
+
+{_md_table(
+    ["シグナル", "TP", "回数", "到達率", "平均日数", "勝平均", "失敗平均", "MFE", "MAE", "期待値", "OOS到達", "OOS回数"],
+    ranking_rows,
+    aligns=["left", "right", "right", "right", "right", "right", "right", "right", "right", "right", "right", "right"],
+)}
+
+## ④ トップ5戦略の詳細
+
+{''.join(detail_blocks)}
+
+## ⑤ エクイティカーブ
+
+![equity](figures/equity.png)
+
+上位5戦略 + Buy&Hold（破線）。横ばい区間は「ポジションを持っていない時間」。
+
+## ⑥ トレード・リターン分布
+
+![distribution](figures/distribution.png)
+
+上位5戦略の全トレードを「利確（緑）」「失敗（赤）」で重ね書き。
+
+## ⑦ シグナル回数 × 期待値（全候補）
+
+![scatter](figures/scatter.png)
+
+右下の点群 = 「回数は稼げるが期待値マイナス」（ただ買ってるだけ）。
+左上に外れている点ほど価値あるシグナル候補（ただし n が小さい点は要警戒）。
+
+## ⑧ 相場コンテキスト
+
+![nikkei](figures/nikkei_overview.png)
+
+5年の日経推移と1年高値からのドローダウン（10%ラインを破線で表示）。
+このバックテスト期間中、10%超のドローダウンに入った局面が **何回・どのくらいの深さだったか** がここから読めます。
+
+## ⑨ メソッドの詳細
+
+- **エントリー**: シグナル発生日の翌日<em>始値</em>で約定（ルックアヘッド回避）
+- **エグジット**: 当日<em>高値</em>が利確水準にタッチした日の<em>終値</em>で利確（保守的：タッチしただけ約定にはしない）
+- **最大保有**: 250営業日 (≒1年) で強制決済し失敗扱い
+- **ポジション**: 1ポジション運用、保有中の新シグナルは無視
+- **シグナル定義**: 20条件 (RSI / BB位置 / 52週位置 / DD率 / 連続DD日数 / リターン / MA乖離 / ゴールデンクロス) から単一/2-way/3-way ANDで網羅
+- **MFE/MAE**: 各トレードの保有中最大含み益 / 最大含み損（%、トレード平均）
+- **Out-of-Sample**: 全期間の末尾約252営業日を IS から除外し、IS でランキング決定 → 同じ戦略を OOS 区間で再評価
+- **データ**: yfinance `^N225`、`auto_adjust=False`（指数値そのまま）
+
+## ⑩ 注意点と限界
+
+1. **5年は短い**。コロナ底（2020/3）や 2018年末暴落のような異常局面が含まれていない。10年〜20年に拡張すると印象が変わる可能性が高い。
+2. **直近トレンドのバイアス**。Buy&Hold で +112%/5年 = ほぼ全シグナルが「勝てて見える」状況。逆相場（横ばい〜下落）でも同じ結果になる保証はない。
+3. **n が小さい**。トップ戦略の多くは n=3〜10。20%の利確水準で十分にトリガーするには、より長期データが必要。
+4. **生存者バイアスを完全には排せない**。ここで上位に来たシグナルが「過去5年の偶然」かもしれない、という前提でOOS列を読む。
+5. **指数 vs ETF**。実トレードでは `1321` (野村日経225ETF) などになるため、配当・スプレッド・板の薄さで若干パフォーマンスが下がる。
+
+## ファイル一覧
+
+- 本ファイル: `backtest/REPORT.md`
+- 生CSV: `backtest/data/results.csv` (全{len(df_is)}行、IS集計のフル)
+- JSONサマリ: `backtest/data/summary.json`
+- 図: `backtest/figures/*.png`
+- ローカル閲覧用HTML（Plotly対話チャート版）: `backtest/report.html`
+- 公開ホスティングの選択肢: `backtest/OPTIONAL_HOSTING.md`
+
+---
+
+*このレポートは `backtest/backtest.py` を実行すると再生成されます。*
+"""
+    return md
 
 
 # ----------------------------- HTML report --------------------------------- #
@@ -733,28 +1134,31 @@ def main(argv: list[str] | None = None) -> int:
     df = compute_indicators(df)
 
     # Out-of-sample split: last ~252 bars are OOS, the rest is IS.
-    if len(df) > 252 + 60:
-        cutoff = len(df) - 252
-        df_is = df.iloc[:cutoff].copy()
-        df_oos = df.iloc[cutoff - 200:].copy()  # carry warm-up
+    n_total = len(df)
+    is_mask = np.zeros(n_total, dtype=bool)
+    oos_mask = np.zeros(n_total, dtype=bool)
+    full_mask = np.ones(n_total, dtype=bool)
+    if n_total > 252 + 60:
+        cutoff = n_total - 252
+        is_mask[:cutoff] = True
+        oos_mask[cutoff:] = True
         oos_start = df.index[cutoff].date()
     else:
-        df_is = df
-        df_oos = None
+        is_mask[:] = True
         oos_start = None
-    print(f"In-sample bars: {len(df_is)} ; OOS starts at {oos_start}")
+    print(f"Total bars: {n_total} ; IS={is_mask.sum()} OOS={oos_mask.sum()} "
+          f"; OOS starts at {oos_start}")
 
-    print("Running In-Sample combo screen...")
-    results_is = run_all(df_is, "IS")
+    print("Running In-Sample combo screen (entries restricted to IS, exits free)...")
+    results_is = run_all(df, entry_mask=is_mask, label="IS")
     df_is_table = to_dataframe(results_is)
     df_is_table = df_is_table.sort_values("expected_value", ascending=False).reset_index(drop=True)
 
-    # Run the same combos on full data so charts show whole 5y equity curve.
-    # We re-simulate just for the top set to keep things tractable.
     top_keys = {(tuple(r["combo"].split(" + ")), int(r["tp_pct"]))
                 for _, r in df_is_table.head(50).iterrows()}
 
-    print("Re-simulating top combos on full 5y for charts...")
+    # --- Re-simulate top combos on full 5y for chart equity curves ---
+    print("Re-simulating top combos on full 5y for chart curves...")
     full_results: list[StratStats] = []
     sigs_full = define_signals(df)
     opens = df["Open"].to_numpy(); highs = df["High"].to_numpy()
@@ -769,28 +1173,18 @@ def main(argv: list[str] | None = None) -> int:
         if s:
             full_results.append(s)
 
-    # OOS lookup table for the strategies we care about.
+    # --- OOS evaluation: same combos, entries restricted to OOS window ---
     oos_lookup: dict[tuple[str, int], dict] = {}
-    if df_oos is not None:
-        print("Evaluating same strategies on OOS slice...")
-        sigs_oos = define_signals(df_oos)
-        # Only the OOS portion's dates for entries; but our simulate above already
-        # iterates on rows. We pass df_oos but include the warm-up rows so signals
-        # have valid history; trades opened *before* OOS start are filtered out.
-        opens_o = df_oos["Open"].to_numpy(); highs_o = df_oos["High"].to_numpy()
-        lows_o = df_oos["Low"].to_numpy(); closes_o = df_oos["Close"].to_numpy()
-        dates_o = df_oos.index.to_numpy()
-        oos_start_ts = pd.Timestamp(oos_start).to_datetime64() if oos_start else None
+    if oos_start is not None:
+        print("Evaluating same strategies with OOS-only entries...")
         for combo, tp in top_keys:
-            sig = sigs_oos[combo[0]].to_numpy()
+            sig = sigs_full[combo[0]].to_numpy()
             for nm in combo[1:]:
-                sig = sig & sigs_oos[nm].to_numpy()
-            trades = simulate(sig, opens_o, highs_o, lows_o, closes_o, dates_o, tp)
-            # Keep only trades that opened on/after OOS start
-            if oos_start_ts is not None:
-                trades = [t for t in trades
-                          if pd.Timestamp(t.entry_date).to_datetime64() >= oos_start_ts]
-            s = aggregate(trades, tp, combo, len(trades))
+                sig = sig & sigs_full[nm].to_numpy()
+            trades = simulate(sig, opens, highs, lows, closes, dates, tp,
+                              entry_mask=oos_mask)
+            n_oos = int((sig & oos_mask).sum())
+            s = aggregate(trades, tp, combo, n_oos)
             if s:
                 oos_lookup[(" + ".join(combo), tp)] = {
                     "hit_rate": s.hit_rate,
@@ -817,7 +1211,7 @@ def main(argv: list[str] | None = None) -> int:
             "generated_at": datetime.utcnow().isoformat() + "Z",
             "ticker": TICKER,
             "rows_total": len(df),
-            "rows_in_sample": len(df_is),
+            "rows_in_sample": int(is_mask.sum()),
             "oos_start": str(oos_start) if oos_start else None,
             "buy_and_hold": bnh,
             "always_buy": always_buy_stats,
@@ -825,20 +1219,54 @@ def main(argv: list[str] | None = None) -> int:
             "top_5": df_is_table.head(5).to_dict(orient="records"),
         }, f, ensure_ascii=False, indent=2, default=str)
 
-    # --- Build HTML ---
-    html = build_html(
+    # --- Generate matplotlib PNG figures for Markdown rendering ---
+    figs_dir = out_dir / "figures"
+    figs_dir.mkdir(parents=True, exist_ok=True)
+    # Pick the same top-5 strategies that will be linked from the markdown.
+    top_n_charts = 5
+    rank = {(tuple(r["combo"].split(" + ")), int(r["tp_pct"])): idx
+            for idx, (_, r) in enumerate(df_is_table.head(top_n_charts).iterrows())}
+    top_for_charts = sorted(
+        [s for s in full_results if (s.combo, s.tp_pct) in rank],
+        key=lambda s: rank[(s.combo, s.tp_pct)],
+    )
+    save_equity_png(top_for_charts, df, figs_dir / "equity.png")
+    save_return_histogram_png(top_for_charts, figs_dir / "distribution.png")
+    save_signal_scatter_png(df_is_table, figs_dir / "scatter.png")
+    save_drawdown_overview_png(df, figs_dir / "nikkei_overview.png")
+    print(f"Wrote {figs_dir}/{{equity,distribution,scatter,nikkei_overview}}.png")
+
+    # --- Build Markdown (primary, mobile-friendly) ---
+    md = build_markdown(
         df_is=df_is_table,
-        results_all=full_results,
         oos_lookup=oos_lookup,
         bnh=bnh,
         always_buy_stats=always_buy_stats,
         day_forward_stats=day_forward_stats,
         df_data=df,
-        top_n_charts=5,
         generated_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+        oos_start=oos_start,
     )
-    (out_dir / "report.html").write_text(html, encoding="utf-8")
-    print(f"Wrote {out_dir / 'report.html'} ({len(html):,} bytes)")
+    (out_dir / "REPORT.md").write_text(md, encoding="utf-8")
+    print(f"Wrote {out_dir / 'REPORT.md'} ({len(md):,} bytes)")
+
+    # --- Build HTML (optional, for local interactive viewing with plotly) ---
+    if HAS_PLOTLY:
+        html = build_html(
+            df_is=df_is_table,
+            results_all=full_results,
+            oos_lookup=oos_lookup,
+            bnh=bnh,
+            always_buy_stats=always_buy_stats,
+            day_forward_stats=day_forward_stats,
+            df_data=df,
+            top_n_charts=top_n_charts,
+            generated_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M"),
+        )
+        (out_dir / "report.html").write_text(html, encoding="utf-8")
+        print(f"Wrote {out_dir / 'report.html'} ({len(html):,} bytes) — local interactive view")
+    else:
+        print("plotly not installed; skipping report.html generation")
     return 0
 
 

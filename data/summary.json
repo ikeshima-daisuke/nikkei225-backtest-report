@@ -1,38 +1,38 @@
 {
-  "generated_at": "2026-05-20T06:16:09.701445Z",
+  "generated_at": "2026-05-20T06:26:13.196155Z",
   "ticker": "^N225",
   "rows_total": 1222,
   "rows_in_sample": 970,
   "oos_start": "2025-05-08",
   "buy_and_hold": {
-    "return_pct": 112.81919247639978,
+    "return_pct": 112.50422624184779,
     "days": 1826,
-    "annualized_pct": 16.296389371219846
+    "annualized_pct": 16.261964778159843
   },
   "always_buy": {
     "5": {
       "hit_rate": 85.0,
       "n_trades": 20,
       "avg_days_to_tp": 39.705882352941174,
-      "expected_value": 3.818818504505357
+      "expected_value": 3.81181730346069
     },
     "10": {
       "hit_rate": 72.72727272727273,
       "n_trades": 11,
       "avg_days_to_tp": 87.25,
-      "expected_value": 6.749322999083516
+      "expected_value": 6.736198249549948
     },
     "15": {
       "hit_rate": 62.5,
       "n_trades": 8,
       "avg_days_to_tp": 128.6,
-      "expected_value": 8.88236691790307
+      "expected_value": 8.863249057305083
     },
     "20": {
       "hit_rate": 42.857142857142854,
       "n_trades": 7,
       "avg_days_to_tp": 125.66666666666667,
-      "expected_value": 11.485451368166492
+      "expected_value": 11.462069534315724
     }
   },
   "day_forward": {
@@ -40,102 +40,102 @@
       "hit_rate": 91.22950819672131,
       "n_entries": 1220,
       "avg_days_to_tp": 49.64150943396226,
-      "avg_return": 4.29451995801684
+      "avg_return": 4.293590408320056
     },
     "10": {
       "hit_rate": 76.22950819672131,
       "n_entries": 1220,
       "avg_days_to_tp": 83.63333333333334,
-      "avg_return": 6.899943509799838
+      "avg_return": 6.897178299241838
     },
     "15": {
       "hit_rate": 67.78688524590164,
       "n_entries": 1220,
       "avg_days_to_tp": 110.55985489721887,
-      "avg_return": 9.745902603846949
+      "avg_return": 9.741103718313392
     },
     "20": {
       "hit_rate": 58.68852459016394,
       "n_entries": 1220,
       "avg_days_to_tp": 125.13966480446928,
-      "avg_return": 12.526129401285878
+      "avg_return": 12.516896159018406
     }
   },
   "top_5": [
+    {
+      "combo": "DD<=-10 + RET20<-5 + GOLDEN",
+      "n_components": 3,
+      "tp_pct": 20,
+      "n_trades": 2,
+      "n_signals_raw": 39,
+      "hit_rate": 100.0,
+      "avg_days_to_tp": 208.0,
+      "avg_win_return": 21.18663225306601,
+      "failure_mean": 0.0,
+      "failure_median": 0.0,
+      "avg_mfe": 21.585985698762496,
+      "avg_mae": -8.133496003649915,
+      "expected_value": 21.18663225306601
+    },
+    {
+      "combo": "DD<=-10 + vsMA75<-5 + GOLDEN",
+      "n_components": 3,
+      "tp_pct": 20,
+      "n_trades": 2,
+      "n_signals_raw": 23,
+      "hit_rate": 100.0,
+      "avg_days_to_tp": 201.0,
+      "avg_win_return": 20.889224599626125,
+      "failure_mean": 0.0,
+      "failure_median": 0.0,
+      "avg_mfe": 21.288578045322613,
+      "avg_mae": -6.626049770629676,
+      "expected_value": 20.889224599626125
+    },
     {
       "combo": "vsMA75<-5 + GOLDEN",
       "n_components": 2,
       "tp_pct": 20,
       "n_trades": 3,
       "n_signals_raw": 25,
-      "hit_rate": 66.66666666666666,
-      "avg_days_to_tp": 112.5,
-      "avg_win_return": 19.70472273288903,
-      "failure_mean": 4.341357710844922,
-      "failure_median": 4.341357710844922,
-      "avg_mfe": 18.511917962468313,
+      "hit_rate": 100.0,
+      "avg_days_to_tp": 157.66666666666666,
+      "avg_win_return": 20.199317035982066,
+      "failure_mean": 0.0,
+      "failure_median": 0.0,
+      "avg_mfe": 20.971991483308013,
       "avg_mae": -4.629252970066155,
-      "expected_value": 14.583601058874326
+      "expected_value": 20.199317035982066
     },
     {
-      "combo": "RSI<40 + 52W<30 + RET5<-3",
-      "n_components": 3,
+      "combo": "STREAK>=5 + GOLDEN",
+      "n_components": 2,
       "tp_pct": 20,
-      "n_trades": 4,
+      "n_trades": 2,
       "n_signals_raw": 32,
-      "hit_rate": 50.0,
-      "avg_days_to_tp": 92.5,
-      "avg_win_return": 20.83391123321447,
-      "failure_mean": 6.288609039339192,
-      "failure_median": 6.288609039339192,
-      "avg_mfe": 16.463562026731893,
-      "avg_mae": -5.12764992105838,
-      "expected_value": 13.56126013627683
+      "hit_rate": 100.0,
+      "avg_days_to_tp": 202.5,
+      "avg_win_return": 19.97818575175571,
+      "failure_mean": 0.0,
+      "failure_median": 0.0,
+      "avg_mfe": 20.99920520309739,
+      "avg_mae": -7.6029220107837245,
+      "expected_value": 19.97818575175571
     },
     {
-      "combo": "RSI<35 + 52W<30 + RET20<-5",
+      "combo": "DD<=-10 + STREAK>=5 + GOLDEN",
       "n_components": 3,
       "tp_pct": 20,
-      "n_trades": 4,
-      "n_signals_raw": 24,
-      "hit_rate": 50.0,
-      "avg_days_to_tp": 92.5,
-      "avg_win_return": 20.83391123321447,
-      "failure_mean": 5.9100979565826615,
-      "failure_median": 5.9100979565826615,
-      "avg_mfe": 16.06259292321461,
-      "avg_mae": -5.449012636371387,
-      "expected_value": 13.372004594898565
-    },
-    {
-      "combo": "RSI<35 + 52W<30 + RET5<-3",
-      "n_components": 3,
-      "tp_pct": 20,
-      "n_trades": 4,
-      "n_signals_raw": 21,
-      "hit_rate": 50.0,
-      "avg_days_to_tp": 92.5,
-      "avg_win_return": 20.83391123321447,
-      "failure_mean": 5.9100979565826615,
-      "failure_median": 5.9100979565826615,
-      "avg_mfe": 16.06259292321461,
-      "avg_mae": -5.449012636371387,
-      "expected_value": 13.372004594898565
-    },
-    {
-      "combo": "RSI<35 + BB<10 + 52W<30",
-      "n_components": 3,
-      "tp_pct": 20,
-      "n_trades": 4,
-      "n_signals_raw": 23,
-      "hit_rate": 50.0,
-      "avg_days_to_tp": 92.5,
-      "avg_win_return": 20.83391123321447,
-      "failure_mean": 5.9100979565826615,
-      "failure_median": 5.9100979565826615,
-      "avg_mfe": 16.06259292321461,
-      "avg_mae": -5.449012636371387,
-      "expected_value": 13.372004594898565
+      "n_trades": 2,
+      "n_signals_raw": 32,
+      "hit_rate": 100.0,
+      "avg_days_to_tp": 202.5,
+      "avg_win_return": 19.97818575175571,
+      "failure_mean": 0.0,
+      "failure_median": 0.0,
+      "avg_mfe": 20.99920520309739,
+      "avg_mae": -7.6029220107837245,
+      "expected_value": 19.97818575175571
     }
   ]
 }
