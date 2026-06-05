@@ -33,6 +33,7 @@ _DAILY_COLUMNS = [
     "equity",
     "unrealized_pnl",
     "margin_ratio",
+    "maintenance_ratio",
     "selected_params_id",
     "events",
 ]
@@ -47,6 +48,7 @@ _TRADE_COLUMNS = [
     "realized_pnl_before_tax",
     "realized_pnl_after_tax",
     "reason",
+    "event_type",
 ]
 
 

@@ -191,6 +191,7 @@ def simulate(
         if pending is not None:
             exec_params_id = pending.params_id
             sell_price = open_p * (1.0 - slip)
+            forced_closes = 0
             for lid in pending.sell_lot_ids:
                 lot = lot_by_id.get(lid)
                 if lot is None:
@@ -205,8 +206,14 @@ def simulate(
                     day_realized_after += rec["realized_pnl_after_tax"]
                     day_tax += rec["tax"]
                     del lot_by_id[lid]
+                    if pending.forced:
+                        forced_closes += 1
                     if record:
                         trades.append(rec)
+            # One forced-liquidation *event* per day the whole book is closed out
+            # by a margin call (counted at execution, not at decision time).
+            if pending.forced and forced_closes > 0:
+                pf.forced_liquidation_count += 1
 
             # Buy after sells (sells free up exposure capacity).
             if pending.buy_amount > 0.0:
@@ -236,6 +243,7 @@ def simulate(
                                     "realized_pnl_before_tax": 0.0,
                                     "realized_pnl_after_tax": 0.0,
                                     "reason": "buy_signal",
+                                    "event_type": "buy",
                                 }
                             )
 
@@ -245,12 +253,24 @@ def simulate(
         interest_today = pf.total_interest_paid - interest_before
         day_events.extend(mevents)
 
+        # --- 2b. Maintenance-margin (追証) check after the close ---
+        # Runs every day so the minimum maintenance ratio is tracked even when
+        # forced liquidation is disabled; only forces a liquidation (next open)
+        # when ``force_liquidation`` is enabled and the book is non-empty.
+        margin_breach = pf.force_liquidation_check()
+        force_now = margin_breach and cfg.force_liquidation and bool(pf.lots)
+        if margin_breach:
+            day_events.append("margin_call")
+            if force_now:
+                day_events.append("forced_liquidation")
+
         took_profit = day_sell_value > 0.0
         tp_flags.append(took_profit)
 
         gross = pf.gross_exposure()
         equity = pf.equity()
         margin_ratio = pf.margin_ratio()
+        maintenance_ratio = pf.maintenance_ratio()
 
         # A "no-take-profit streak" only accrues on days we actually hold a
         # position (a flat day has nothing to take profit on, so it resets the
@@ -276,6 +296,9 @@ def simulate(
                     "equity": equity,
                     "unrealized_pnl": pf.unrealized_pnl(),
                     "margin_ratio": margin_ratio if math.isfinite(margin_ratio) else np.inf,
+                    "maintenance_ratio": (
+                        maintenance_ratio if math.isfinite(maintenance_ratio) else np.inf
+                    ),
                     "selected_params_id": exec_params_id,
                     "events": ";".join(day_events),
                     "took_profit": took_profit,
@@ -283,8 +306,9 @@ def simulate(
             )
 
         # --- 3. Decide for the next day using day-i close information ---
-        # Optional forced liquidation is a *system* event, taking precedence.
-        if cfg.force_liquidation and "margin_call" in day_events and pf.lots:
+        # A forced liquidation is a *system* event and takes precedence: close
+        # the entire book at the next open (realizing losses too).
+        if force_now:
             pending = Decision(
                 buy_amount=0.0,
                 sell_lot_ids=[lot.lot_id for lot in pf.lots],
