@@ -71,6 +71,19 @@ pytest -q                        # 33 tests, 外部通信なし
   （`force_liquidation` ON 時のみ例外）。
 - **再現性**: 最適化は seed 固定。テストは人工データのみで外部通信しない。
 
+### 実行環境のはまりどころ（Claude Code 向け・毎回プロンプトに書かない）
+- **venv**: `nikkei_leverage_sim/.venv`。実行は `./.venv/Scripts/python.exe`、テストは `./.venv/Scripts/python.exe -m pytest`。
+- **文字コード**: ルートの `.claude/settings.json` で `PYTHONUTF8=1` / `PYTHONIOENCODING=utf-8` を常設済み。
+  これにより CLI が ¥ 記号を出しても cp932 で落ちない。**`PYTHONUTF8=1` の前置きは不要**（settings.json が肩代わり）。
+- **git-bash の `cd`**: バックスラッシュ path だと壊れる。**forward slash** を使う
+  （例: `cd /c/Users/rief5/nikkei225-backtest-report/nikkei_leverage_sim`）。
+- **実データ**: `data/target_1570_T.csv`・`data/benchmark_N225.csv`（**gitignore 済・ローカルのみ**、2014–2026・3,032営業日）。
+  2021-04-27/28 のベンダー偽半値はエンジンが**自動補修**（既定 ON、`repair_glitches=False` で無効化可）。補修跡は summary.json の `data_quality` と report.md に残る。
+- **生成物の追跡方針**: 嵩む per-row 出力（`outputs_margincall/*/{daily,trades,optimization}.csv`・`outputs_variants/*/rows.json`・`outputs_variants/wf_params.pkl`）は `.gitignore` で除外。
+  **summary.json・小さい CSV・PNG・report.md は追跡**。大量 CSV を新規コミットする前にユーザーへ確認。
+- **Codex レビュー**: `codex:codex-rescue` サブエージェント経由。プロンプトに **「pytest」「-m pytest」の語を入れない**
+  （companion の引数パーサが `--model pytest` と誤認し 400）。「静的レビューのみ、テストはローカルで全件パス」と書く。
+
 ## 全体的な作業方針
 
 - 2 つのプロジェクトは独立。一方を触る変更が他方に波及しないようにする。

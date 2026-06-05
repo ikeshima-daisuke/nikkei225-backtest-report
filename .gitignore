@@ -20,3 +20,7 @@ nikkei_leverage_sim/outputs_real_fast/*.csv
 
 # Local analysis helper scripts
 nikkei_leverage_sim/analyze_daily.py
+
+# Claude Code: track settings.json (shared env/config), ignore transient worktrees + personal overrides
+.claude/worktrees/
+.claude/settings.local.json
