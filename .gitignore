@@ -10,8 +10,8 @@ venv/
 # Backtest data (excluded from repo — provide locally)
 nikkei_leverage_sim/data/
 
-# Full-version backtest output (in progress / regenerated)
-nikkei_leverage_sim/outputs_real/
+# outputs_real/ (full version) and outputs_real_codex/ are committed for the report.
+# Old sample run output stays excluded (regenerated locally).
 nikkei_leverage_sim/outputs/
 
 # Local analysis helper scripts
