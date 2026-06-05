@@ -1,0 +1,35 @@
+[
+  {
+    "name": "1570.T Buy & Hold",
+    "final_equity": 1291911111.1111112,
+    "total_return": 11.919111111111112,
+    "annualized_return": 0.23696777326816987,
+    "max_drawdown_pct": 0.5538267451640033,
+    "sharpe_like": 0.7175778028441402,
+    "sortino_ratio": 0.6986748983687867,
+    "ulcer_index": 19.870164133989885,
+    "cvar_95_daily": 0.061441263375663496
+  },
+  {
+    "name": "N225 Buy & Hold",
+    "final_equity": 418890663.5218035,
+    "total_return": 3.188906635218035,
+    "annualized_return": 0.1264318918539742,
+    "max_drawdown_pct": 0.31798896508501917,
+    "sharpe_like": 0.6657173742273081,
+    "sortino_ratio": 0.6544096431407522,
+    "ulcer_index": 9.70230464533206,
+    "cvar_95_daily": 0.030901299954426465
+  },
+  {
+    "name": "Cash (no position)",
+    "final_equity": 100000000.0,
+    "total_return": 0.0,
+    "annualized_return": 0.0,
+    "max_drawdown_pct": 0.0,
+    "sharpe_like": 0.0,
+    "sortino_ratio": 0.0,
+    "ulcer_index": 0.0,
+    "cvar_95_daily": -0.0
+  }
+]

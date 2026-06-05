@@ -40,8 +40,8 @@ re-selects buy params every 5 days (~2.5 min). We:
 So every combo buys *exactly like the published fast strategy*; only the
 entry/exit rule differs — a clean controlled comparison. Replaying the captured
 sequence with `per_lot / init0` reproduces the published fast result to the yen
-(¥10,482,989 / max DD ¥5.26M / max unrealized loss ¥5.28M), which is asserted as
-a validation check.
+(¥9,988,026 / max DD ¥5.26M / max unrealized loss ¥5.28M; v2 post-repair value),
+which is asserted as a validation check.
 
 ## Robustness: two buy engines
 
