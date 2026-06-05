@@ -52,7 +52,9 @@ class _Result:
 
 
 def test_objective_score_combines_terms():
+    # Margin-call penalty applies only when forced liquidation is enabled.
     cfg = Config()
+    cfg.force_liquidation = True
     r = _Result()
     expected = (
         100_000.0
@@ -64,3 +66,25 @@ def test_objective_score_combines_terms():
         - 50_000.0 * 3.0
     )
     assert math.isclose(objective_score(r, cfg), expected)
+
+
+def test_objective_score_margin_call_only_when_forced():
+    # With forced liquidation OFF, margin_call_count carries no objective weight
+    # (institutional events are recording-only) -> the margin term is dropped.
+    cfg = Config()
+    cfg.force_liquidation = False
+    r = _Result()
+    expected_no_margin = (
+        100_000.0
+        + 20_000.0
+        - 0.5 * 40_000.0
+        - 0.5 * 10_000.0
+        - 100_000.0 * 2
+        - 50_000.0 * 3.0
+    )
+    assert math.isclose(objective_score(r, cfg), expected_no_margin)
+    # Enabling it re-introduces exactly the margin penalty.
+    cfg.force_liquidation = True
+    assert math.isclose(
+        objective_score(r, cfg), expected_no_margin - 1_000_000.0 * 1
+    )

@@ -62,17 +62,27 @@ def objective_score(result: "SimResultLike", cfg: Config) -> float:
 
     ``score = realized_after_tax + ending_unrealized_pnl``
     ``      - w_dd * max_drawdown_equity - w_ul * max_unrealized_loss``
-    ``      - margin_call_penalty * margin_call_count``
+    ``      - margin_call_penalty * margin_call_count   (only when force_liquidation)``
     ``      - exposure_penalty * exposure_limit_hit_count``
     ``      - no_tp_penalty * no_take_profit_streak_penalty``
+
+    The margin-call term is applied **only when ``cfg.force_liquidation`` is on**.
+    Per the project invariant, institutional events (追証) are recording-only and
+    must not steer strategy/parameter selection *unless* forced liquidation is
+    enabled — in which case a breach really does force a loss, so the optimizer is
+    allowed to avoid it.  When the model is off, ``margin_call_count`` is still
+    recorded for reporting but carries no objective weight.
     """
     o = cfg.objective
+    margin_call_term = (
+        o.margin_call_penalty * result.margin_call_count if cfg.force_liquidation else 0.0
+    )
     return (
         result.realized_after_tax
         + result.ending_unrealized_pnl
         - o.weight_max_drawdown_equity * result.max_drawdown_equity
         - o.weight_max_unrealized_loss * result.max_unrealized_loss
-        - o.margin_call_penalty * result.margin_call_count
+        - margin_call_term
         - o.exposure_limit_hit_penalty * result.exposure_limit_hit_count
         - o.no_take_profit_streak_penalty * result.no_tp_streak_penalty
     )
