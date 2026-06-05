@@ -113,6 +113,94 @@ def _cmd_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_stress(args: argparse.Namespace) -> int:
+    """Stress testing (D1): historical regimes, cost sensitivity, bootstrap ruin."""
+    from .backtest import simulate
+    from .optimizer import WalkForwardOptimizer
+    from . import stress as stress_mod
+    import pandas as pd
+
+    cfg = load_config(args.config)
+    if args.seed is not None:
+        cfg.optimization.random_seed = int(args.seed)
+
+    if args.synthetic:
+        target_df, benchmark_df = make_synthetic_data(
+            n_days=args.synthetic_days, seed=args.synthetic_seed
+        )
+        joined = join_target_benchmark(target_df, benchmark_df)
+    else:
+        if not args.target or not args.benchmark:
+            print("error: --target and --benchmark CSVs are required (or --synthetic)", file=sys.stderr)
+            return 2
+        joined = load_market_data(args.target, args.benchmark)
+
+    md = prepare_market_data(joined, cfg)
+    print(f"Loaded {md.n} rows. Running base backtest for regime slicing ...", flush=True)
+
+    # 1. Historical regimes from a full walk-forward run at the base config.
+    result = run_backtest(md, cfg)
+    daily = pd.DataFrame(result.daily_rows)
+    regimes = stress_mod.all_regime_metrics(daily)
+
+    # 2. Cost sensitivity: capture the walk-forward parameter sequence once, then
+    #    replay under the cost grid (decisions fixed).
+    print("Capturing walk-forward parameter sequence for sensitivity ...", flush=True)
+    opt = WalkForwardOptimizer(md, cfg)
+    param_seq = [opt.params_at_close(i) for i in range(md.n)]
+    provider = lambda i: param_seq[i]  # noqa: E731
+    sensitivity = stress_mod.sensitivity_grid(
+        md, cfg, provider,
+        slippage_bps_list=[2.0, 5.0, 10.0, 20.0],
+        interest_rate_list=[0.015, 0.028, 0.04, 0.06],
+    )
+
+    # Per-regime maintenance ratios / forced closes at a THIN own-funds level
+    # (replay the same captured tape at the ruin-equity with forced liquidation
+    # on), so the regime maintenance ratios are meaningful (not trivial as at
+    # ¥100M).
+    from dataclasses import replace as _replace
+    thin_cfg = _replace(cfg, initial_equity=float(args.ruin_equity), force_liquidation=True)
+    thin_res = simulate(md, 0, md.n, provider, thin_cfg, record=True)
+    daily_thin = pd.DataFrame(thin_res.daily_rows)
+    regimes_thin = stress_mod.all_regime_metrics(daily_thin)
+
+    # 3. Bootstrap ruin at a realistic own-funds level with forced liquidation on.
+    ruin_cfg = load_config(args.config)
+    ruin_cfg.initial_equity = float(args.ruin_equity)
+    ruin_cfg.force_liquidation = True
+    print(
+        f"Running {args.bootstrap_paths} bootstrap paths at "
+        f"¥{ruin_cfg.initial_equity:,.0f} (force_liquidation on) ...",
+        flush=True,
+    )
+    bootstrap = stress_mod.block_bootstrap_ruin(
+        joined, ruin_cfg,
+        n_paths=args.bootstrap_paths, block_size=args.block_size,
+        seed=cfg.optimization.random_seed,
+    )
+
+    meta = {
+        "initial_equity": cfg.initial_equity,
+        "ruin_initial_equity": ruin_cfg.initial_equity,
+        "random_seed": cfg.optimization.random_seed,
+        "sessions": md.n,
+        "data_repairs": list(md.data_repairs),
+    }
+    stress_mod.write_stress_outputs(
+        args.out, regimes, sensitivity, bootstrap, regimes_thin=regimes_thin, meta=meta
+    )
+
+    print(f"\nDone. Stress outputs written to {Path(args.out).resolve()}")
+    print(f"  regimes: {len(regimes)} | sensitivity cells: {len(sensitivity)}")
+    print(
+        f"  bootstrap: ruin {bootstrap.ruin_probability:.1%}, "
+        f"forced {bootstrap.forced_liquidation_probability:.1%}, "
+        f"median final ¥{bootstrap.median_final_equity:,.0f}"
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="nikkei_leverage_sim",
@@ -163,6 +251,25 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--synthetic-days", type=int, default=900)
     p_run.add_argument("--synthetic-seed", type=int, default=7)
     p_run.set_defaults(func=_cmd_run)
+
+    p_stress = sub.add_parser(
+        "stress", help="Stress test: historical regimes, cost sensitivity, bootstrap ruin"
+    )
+    p_stress.add_argument("--config", required=True)
+    p_stress.add_argument("--target", help="Target ETF OHLCV CSV path")
+    p_stress.add_argument("--benchmark", help="Benchmark OHLCV CSV path")
+    p_stress.add_argument("--out", default="outputs_stress/")
+    p_stress.add_argument("--seed", type=int, default=None, help="Override optimization.random_seed")
+    p_stress.add_argument(
+        "--ruin-equity", type=float, default=5_000_000.0,
+        help="Own funds for the bootstrap ruin study (forced liquidation on)",
+    )
+    p_stress.add_argument("--bootstrap-paths", type=int, default=300)
+    p_stress.add_argument("--block-size", type=int, default=20)
+    p_stress.add_argument("--synthetic", action="store_true", help="Use synthetic data")
+    p_stress.add_argument("--synthetic-days", type=int, default=900)
+    p_stress.add_argument("--synthetic-seed", type=int, default=7)
+    p_stress.set_defaults(func=_cmd_stress)
 
     return parser
 
