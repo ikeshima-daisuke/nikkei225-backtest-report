@@ -186,13 +186,13 @@ In-Sample で期待値が最も高かったシグナル組み合わせ（OOS = �
 
 ## ファイル一覧
 
-- 本ファイル: `backtest/REPORT.md`
-- 生CSV: `backtest/data/results.csv` (全1240行、IS集計のフル)
-- JSONサマリ: `backtest/data/summary.json`
-- 図: `backtest/figures/*.png`
-- ローカル閲覧用HTML（Plotly対話チャート版）: `backtest/report.html`
-- 公開ホスティングの選択肢: `backtest/OPTIONAL_HOSTING.md`
+- 本ファイル: `signal_report/REPORT.md`
+- 生CSV: `signal_report/data/results.csv` (全1240行、IS集計のフル)
+- JSONサマリ: `signal_report/data/summary.json`
+- 図: `signal_report/figures/*.png`
+- ローカル閲覧用HTML（Plotly対話チャート版）: `signal_report/report.html`
+- 公開ホスティングの選択肢: `signal_report/OPTIONAL_HOSTING.md`
 
 ---
 
-*このレポートは `backtest/backtest.py` を実行すると再生成されます。*
+*このレポートは `signal_report/backtest.py` を実行すると再生成されます。*

@@ -1,7 +1,8 @@
 # フォルダ整理計画（MIGRATION）
 
-> ステータス: **提案（未実施）**。本ドキュメントは整理方針の合意形成のためのもので、
-> 実ファイルはまだ移動していません。合意後に `git mv` で実施します。
+> ステータス: **実施済み**。本計画に沿って ① を `signal_report/` へ移動済み。
+> `index.html` は GitHub Pages 保護のためルートに残置。生成物の追跡方針（下記「未決事項」）は
+> 現状維持（移動のみ）で、`.gitignore` 化は別途判断とする。
 
 ## 背景
 
@@ -102,9 +103,12 @@ $EDITOR README.md   # 2 プロジェクトの概要と各 README へのリンク
 
 ## 実施チェックリスト
 
-- [ ] GitHub Pages の配信元設定を確認（`index.html` をルートに残すか判断）
-- [ ] `git mv` で ① を `signal_report/` へ移動
-- [ ] リポジトリ全体の新 `README.md` を作成
-- [ ] 移動後に `REPORT.md` の画像・`index.html` のリンク表示を確認
-- [ ] 生成物の扱い（A/B/C）を決定し反映
-- [ ] `signal_report/README.md` 内のパス記述（`backtest/data/...` 等）を必要に応じて更新
+- [x] `git mv` で ① を `signal_report/` へ移動（履歴保持）
+- [x] `index.html` はルートに残置（GitHub Pages 保護）
+- [x] リポジトリ全体の新 `README.md` を作成（2 プロジェクトへ誘導）
+- [x] `REPORT.md` の画像参照（相対 `figures/*.png`）が移動後も解決することを確認
+- [x] 文書内のパス記述（旧 `backtest/...` → `signal_report/...`）を更新。生成元 `backtest.py` の
+      テンプレートも合わせて修正し、再生成時も正しいパスになるようにした
+- [x] 追跡されていた stale な `__pycache__/*.pyc` を削除（`.gitignore` 済み）
+- [ ] **未対応**: GitHub Pages の配信元設定を Settings で確認（`index.html` がルート配信か）
+- [ ] **未対応**: 生成物の扱い（A 現状維持 / B .gitignore / C 折衷）を決定 → 現状は A（移動のみ）
