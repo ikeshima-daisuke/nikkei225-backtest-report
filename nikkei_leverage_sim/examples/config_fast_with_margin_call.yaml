@@ -1,0 +1,71 @@
+# fast版（週次・apply_days=5）に「強制ロスカット（追証）モデル」を有効化した設定。
+# config_fast.yaml との差分は force_liquidation: false -> true のみ。
+#
+# 注意: initial_equity は既存設定どおり ¥100,000,000 のまま。この規模では自己資金
+# (¥100M) が最大建玉 (≤¥10.8M) を 10 倍以上担保しており、委託保証金維持率は常時
+# ~8〜9 と 30% 閾値を大きく上回るため、このファイル単体では強制決済は発火しない
+# （＝過剰担保の検証）。現実的な自己資金水準での効果検証は CLI 上書きで行う:
+#
+#   # 現実的な自己資金 ¥5M（最大建玉に対し最大2倍レバ）— 強制決済オフ（楽観モデル）
+#   python -m nikkei_leverage_sim.cli run --config examples/config_fast_with_margin_call.yaml \
+#     --target data/target_1570_T.csv --benchmark data/benchmark_N225.csv \
+#     --no-force-liquidation --initial-equity 5000000 --out outputs_margincall/fast_realistic_off
+#
+#   # 同じ ¥5M で強制決済オン（現実モデル）
+#   python -m nikkei_leverage_sim.cli run --config examples/config_fast_with_margin_call.yaml \
+#     --target data/target_1570_T.csv --benchmark data/benchmark_N225.csv \
+#     --initial-equity 5000000 --out outputs_margincall/fast_realistic_on
+
+initial_equity: 100000000
+max_gross_exposure: 10000000
+maintenance_margin_ratio: 0.30
+warning_margin_ratio: 0.50
+force_liquidation: true
+
+commission_bps: 0.0
+slippage_bps: 2.0
+annual_margin_interest_rate: 0.028
+tax_rate: 0.20315
+
+optimization:
+  enabled: true
+  method: random
+  random_seed: 42
+  n_trials: 40
+  lookback_days: 252
+  min_train_days: 200
+  apply_days: 5
+  rebalance_frequency: weekly
+
+execution:
+  signal_timing: close_t
+  execution_timing: next_open
+  valuation_price: close
+
+strategy:
+  default_params:
+    base_buy_amount: 200000
+    max_daily_buy_amount: 1000000
+    score_threshold: 0.0
+    score_scale: 2.0
+    w_drawdown: 2.5
+    w_rsi: 1.5
+    w_ma_gap_25: 1.5
+    w_ret_5: 1.0
+    w_trend: 0.5
+    w_vol: 2.0
+    w_exposure: 5.0
+    w_unrealized_loss: 5.0
+    fixed_profit_yen: 5000
+    base_take_profit_pct: 0.006
+    min_take_profit_pct: 0.002
+    exposure_tp_sensitivity: 0.5
+    vol_tp_multiplier: 1.0
+
+objective:
+  weight_max_drawdown_equity: 0.5
+  weight_max_unrealized_loss: 0.5
+  margin_call_penalty: 1000000
+  exposure_limit_hit_penalty: 100000
+  no_take_profit_streak_penalty: 50000
+  no_take_profit_grace_days: 20

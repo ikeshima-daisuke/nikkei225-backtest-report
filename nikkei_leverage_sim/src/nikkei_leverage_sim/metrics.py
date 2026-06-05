@@ -185,9 +185,20 @@ def build_summary(result, cfg: Config) -> Dict[str, object]:
         "max_lot_holding_days": pf.max_lot_holding_days,
         "margin_warning_count": pf.margin_warning_count,
         "margin_call_count": pf.margin_call_count,
+        "forced_liquidation_count": pf.forced_liquidation_count,
+        "min_maintenance_ratio": (
+            pf.min_maintenance_ratio_seen
+            if math.isfinite(pf.min_maintenance_ratio_seen)
+            else None
+        ),
         "annualized_return": annualized_return(result.equity_curve, n_days),
         "sharpe_like_ratio": sharpe_like(result.equity_curve),
         "profit_factor": profit_factor,
+        # --- run configuration echoed for reproducibility / audit ---
+        "force_liquidation": cfg.force_liquidation,
+        "maintenance_margin_ratio": cfg.maintenance_margin_ratio,
+        "warning_margin_ratio": cfg.warning_margin_ratio,
+        "random_seed": cfg.optimization.random_seed,
     }
 
 

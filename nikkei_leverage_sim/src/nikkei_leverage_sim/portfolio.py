@@ -4,9 +4,13 @@ The portfolio manages a list of :class:`Lot` objects (margin *long* positions).
 Key rules enforced here:
 
 * Buying creates a new lot; selling closes specific lots only.
-* A loss is **never** realized — the engine only ever asks to sell lots that are
-  in profit, and :meth:`Portfolio.sell_lot` additionally refuses to realize a
-  negative ``net_pnl_before_tax`` (a final safety guard).
+* A loss is **never** realized by the *strategy* — the engine only ever asks to
+  sell lots that are in profit, and :meth:`Portfolio.sell_lot` additionally
+  refuses to realize a negative ``net_pnl_before_tax`` (a final safety guard).
+  The **sole exception** is a broker *forced liquidation* (追証/強制ロスカット):
+  when :meth:`Portfolio.force_liquidation_check` reports a maintenance-margin
+  breach, the engine closes the whole book via ``sell_lot(..., force=True)``,
+  which bypasses that guard.  This is a *system* event, not a stop-loss.
 * Margin interest accrues daily on each open lot's market value.
 * Tax is charged only on positive realized P&L of a closed lot.
 
@@ -83,7 +87,9 @@ class Portfolio:
         self.exposure_obs = 0
         self.equity_curve: List[float] = []
         self.margin_warning_count = 0
-        self.margin_call_count = 0
+        self.margin_call_count = 0          # days the maintenance ratio breached
+        self.forced_liquidation_count = 0   # distinct forced-liquidation events
+        self.min_maintenance_ratio_seen = math.inf
         self.exposure_limit_hit_count = 0
         self.max_lot_holding_days = 0
 
@@ -111,6 +117,63 @@ class Portfolio:
         if ge <= 0.0:
             return math.inf
         return self.equity() / ge
+
+    def maintenance_ratio(self) -> float:
+        """Broker-style 委託保証金維持率 used for the forced-liquidation (追証) check.
+
+        ``maintenance_ratio = (cash_buffer + unrealized_pnl) / gross_position``
+
+        where ``cash_buffer = initial_equity - total_interest_paid - total_tax_paid``
+        (own funds net of financing/tax costs already paid) and ``gross_position``
+        is the current mark-to-market value of all open lots.  Returns ``inf``
+        when the book is flat (no position -> never a margin call).
+
+        Note (deliberate deviation from the literal Week-0.5 brief): the brief
+        wrote the numerator as ``cash_buffer + unrealized_pnl + gross_position``.
+        That extra ``+ gross_position`` makes the ratio ``>= 1`` for any positive
+        own funds, so a 30%% maintenance threshold could never trigger — it is
+        the standard Japanese 委託保証金維持率 (= collateral / position) that the
+        existing ``maintenance_margin_ratio = 0.30`` setting is designed for, so
+        the spurious term is dropped here.  See ``force_liquidation_check``.
+        """
+        ge = self.gross_exposure()
+        if ge <= 0.0:
+            return math.inf
+        cash_buffer = (
+            self.cfg.initial_equity - self.total_interest_paid - self.total_tax_paid
+        )
+        return (cash_buffer + self.unrealized_pnl()) / ge
+
+    def force_liquidation_check(self) -> bool:
+        """Daily post-close maintenance check (追証 / forced loss-cut).
+
+        Computes :meth:`maintenance_ratio` after the close has been marked, and
+        returns ``True`` when it has fallen below ``cfg.maintenance_margin_ratio``
+        — i.e. a real broker would issue a margin call and force-close the whole
+        book at the next open.  Side effects (run exactly once per trading day by
+        the engine):
+
+        * tracks the running minimum maintenance ratio
+          (:attr:`min_maintenance_ratio_seen`), reported for *every* run so the
+          "lowest maintenance ratio" is visible even when forced liquidation is
+          disabled;
+        * increments :attr:`margin_call_count` on a breach, regardless of the
+          ``force_liquidation`` flag (so a no-liquidation run still reports how
+          many days it *would* have been margin-called).
+
+        The actual selling and the per-event :attr:`forced_liquidation_count`
+        are handled by the engine, which only acts on a breach when
+        ``cfg.force_liquidation`` is enabled (the loss-cut is a *system* event,
+        never a strategy stop-loss — see :meth:`sell_lot`).
+        """
+        ratio = self.maintenance_ratio()
+        if math.isfinite(ratio):
+            if ratio < self.min_maintenance_ratio_seen:
+                self.min_maintenance_ratio_seen = ratio
+            if ratio < self.cfg.maintenance_margin_ratio:
+                self.margin_call_count += 1
+                return True
+        return False
 
     # ------------------------------------------------------------------ #
     # Daily update
@@ -143,15 +206,14 @@ class Portfolio:
         eq = self.cash() + upnl
         self.equity_curve.append(eq)
 
-        # Margin events are recorded but (by default) do not trigger trades.
+        # The maintenance-ratio breach (追証 / margin call) and the resulting
+        # forced liquidation are handled by the engine via
+        # ``force_liquidation_check`` *after* this mark-to-market, so a breach is
+        # counted exactly once and the book is closed at the next open.  Here we
+        # only flag the informational *warning* band (maintenance <= ratio < warn).
         if ge > 0.0:
-            ratio = eq / ge
-            if ratio < self.cfg.maintenance_margin_ratio:
-                self.margin_call_count += 1
-                events.append("margin_call")
-                if self.cfg.force_liquidation:
-                    events.append("forced_liquidation")
-            elif ratio < self.cfg.warning_margin_ratio:
+            ratio = self.maintenance_ratio()
+            if self.cfg.maintenance_margin_ratio <= ratio < self.cfg.warning_margin_ratio:
                 self.margin_warning_count += 1
                 events.append("margin_warning")
         return events
@@ -231,4 +293,5 @@ class Portfolio:
             "realized_pnl_after_tax": net_after_tax,
             "tax": tax,
             "reason": "forced_liquidation" if force else "take_profit",
+            "event_type": "forced_liquidation" if force else "take_profit",
         }

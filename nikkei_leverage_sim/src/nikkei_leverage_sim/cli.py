@@ -57,6 +57,15 @@ def _cmd_synth(args: argparse.Namespace) -> int:
 def _cmd_run(args: argparse.Namespace) -> int:
     cfg = load_config(args.config)
 
+    # CLI overrides (handy for running the same config under several scenarios
+    # without duplicating YAML files).  ``None`` means "leave the config value".
+    if args.seed is not None:
+        cfg.optimization.random_seed = int(args.seed)
+    if args.force_liquidation is not None:
+        cfg.force_liquidation = bool(args.force_liquidation)
+    if args.initial_equity is not None:
+        cfg.initial_equity = float(args.initial_equity)
+
     if args.synthetic:
         target_df, benchmark_df = make_synthetic_data(
             n_days=args.synthetic_days, seed=args.synthetic_seed
@@ -94,7 +103,11 @@ def _cmd_run(args: argparse.Namespace) -> int:
         "max_drawdown_equity",
         "max_consecutive_days_without_take_profit",
         "margin_call_count",
+        "forced_liquidation_count",
+        "min_maintenance_ratio",
         "exposure_limit_hit_count",
+        "force_liquidation",
+        "random_seed",
     ):
         print(f"  {key}: {summary.get(key)}")
     return 0
@@ -127,6 +140,25 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--target", help="Target ETF OHLCV CSV path")
     p_run.add_argument("--benchmark", help="Benchmark OHLCV CSV path")
     p_run.add_argument("--out", default="outputs/")
+    p_run.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Override optimization.random_seed (reproducibility)",
+    )
+    p_run.add_argument(
+        "--force-liquidation",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        dest="force_liquidation",
+        help="Override force_liquidation: enable/disable the margin-call model",
+    )
+    p_run.add_argument(
+        "--initial-equity",
+        type=float,
+        default=None,
+        help="Override initial_equity (own funds / committed margin, JPY)",
+    )
     p_run.add_argument("--synthetic", action="store_true", help="Use synthetic data")
     p_run.add_argument("--synthetic-days", type=int, default=900)
     p_run.add_argument("--synthetic-seed", type=int, default=7)
