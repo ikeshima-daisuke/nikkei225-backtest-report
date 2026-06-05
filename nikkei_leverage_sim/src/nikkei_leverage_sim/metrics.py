@@ -108,7 +108,7 @@ def sharpe_like(daily_equity: Sequence[float]) -> float:
 
 def annualized_return(equity_curve: Sequence[float], n_trading_days: int) -> float:
     """Compound annual growth rate of the equity curve."""
-    if not equity_curve or n_trading_days <= 0:
+    if len(equity_curve) == 0 or n_trading_days <= 0:
         return 0.0
     start = equity_curve[0]
     end = equity_curve[-1]
