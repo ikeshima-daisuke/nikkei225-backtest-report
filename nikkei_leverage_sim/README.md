@@ -6,6 +6,10 @@
 
 > ⚠️ これは研究用のバックテストであり、**将来の成績を一切保証しません**。後述の「注意点」を必ず読んでください。
 
+> 📊 **実データ結果**は [`REPORT_REAL.md`](REPORT_REAL.md)（fast/フル/Codex の3版比較）。
+> 🧪 **戦略バリアント**（初期一括・一括売却[固定円/固定%]・combo の432通りグリッドサーチ）は
+> [`REPORT_VARIANTS.md`](REPORT_VARIANTS.md) と [`variants/`](variants/README.md)。コア無改変の独立実装です。
+
 ---
 
 ## 目的
