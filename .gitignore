@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Backtest data (excluded from repo — provide locally)
+nikkei_leverage_sim/data/
+
+# Full-version backtest output (in progress / regenerated)
+nikkei_leverage_sim/outputs_real/
+nikkei_leverage_sim/outputs/
+
+# Local analysis helper scripts
+nikkei_leverage_sim/analyze_daily.py
