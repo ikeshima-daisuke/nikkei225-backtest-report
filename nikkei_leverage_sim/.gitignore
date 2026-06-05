@@ -7,3 +7,8 @@ build/
 dist/
 # Generated data CSVs (regenerate with the `synth`/`fetch` CLI commands)
 data/*.csv
+
+# Variant grid: keep summaries / plots / report, drop the regenerable walk-forward
+# cache (a self-produced pickle) and the bulky per-row JSON dumps (CSV is canonical).
+outputs_variants/wf_params.pkl
+outputs_variants/*/rows.json
