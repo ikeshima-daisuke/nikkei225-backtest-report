@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nikkei-leverage-sim"
+version = "0.1.0"
+description = "Backtester for a margin-long accumulation & take-profit strategy on the Nikkei leverage ETF (1570.T)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+fetch = ["yfinance>=0.2.40"]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+nikkei-leverage-sim = "nikkei_leverage_sim.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["src"]
