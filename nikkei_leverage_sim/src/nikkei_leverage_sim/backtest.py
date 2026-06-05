@@ -48,6 +48,7 @@ class MarketData:
     ind_rows: List[Dict[str, float]]
     valid: np.ndarray              # bool mask: indicators present -> tradable
     n: int
+    data_repairs: List[Dict[str, Any]] = field(default_factory=list)
 
 
 def prepare_market_data(joined: pd.DataFrame, cfg: Config) -> MarketData:
@@ -79,6 +80,7 @@ def prepare_market_data(joined: pd.DataFrame, cfg: Config) -> MarketData:
         ind_rows=ind_rows,
         valid=valid,
         n=n,
+        data_repairs=list(getattr(joined, "attrs", {}).get("data_repairs", []) or []),
     )
 
 
@@ -353,6 +355,7 @@ class BacktestResult:
     sim: SimResult
     optimization_rows: List[Dict[str, Any]]
     config: Config
+    data_repairs: List[Dict[str, Any]] = field(default_factory=list)
 
     # Convenience pass-throughs used by the reporting layer.
     @property
@@ -396,4 +399,9 @@ def run_backtest(md: MarketData, cfg: Config) -> BacktestResult:
 
     opt = WalkForwardOptimizer(md, cfg)
     result = simulate(md, 0, md.n, opt.params_at_close, cfg, record=True)
-    return BacktestResult(sim=result, optimization_rows=opt.optimization_rows, config=cfg)
+    return BacktestResult(
+        sim=result,
+        optimization_rows=opt.optimization_rows,
+        config=cfg,
+        data_repairs=list(md.data_repairs),
+    )
