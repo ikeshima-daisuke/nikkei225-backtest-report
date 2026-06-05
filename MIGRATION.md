@@ -1,7 +1,8 @@
 # フォルダ整理計画（MIGRATION）
 
-> ステータス: **提案（未実施）**。本ドキュメントは整理方針の合意形成のためのもので、
-> 実ファイルはまだ移動していません。合意後に `git mv` で実施します。
+> ステータス: **実施済み**。本計画に沿って ① を `signal_report/` へ移動済み。
+> `index.html` は GitHub Pages 保護のためルートに残置。生成物の追跡方針は **C（折衷）** で確定
+> （下記セクション参照）。残るユーザー確認事項は GitHub Pages の配信元設定のみ。
 
 ## 背景
 
@@ -86,25 +87,34 @@ $EDITOR README.md   # 2 プロジェクトの概要と各 README へのリンク
 - もし Pages を使っていない / 別設定なら、`index.html` も `signal_report/` へ移してよい。
 - **実施前に Settings → Pages の配信元設定を確認すること。**
 
-## 未決事項 — 生成物（outputs / data / figures）の扱い
+## 生成物（outputs / data / figures）の扱い — 決定: C（折衷）
 
-再生成可能な成果物をリポジトリに含めるかは方針が割れるため、**保留**とする。
+「レポートを GitHub / モバイルでそのまま読む」という本リポジトリの設計思想を踏まえ、
+**レポート表示に必要な成果物は追跡し、埋め込まれていない大きな生データ羅列は追跡外**とする。
 
-| 方針 | 利点 | 欠点 |
-|---|---|---|
-| **A. 現状維持（コミットし続ける）** | clone しただけでレポート画像・CSV が見られる。GitHub 上でそのまま閲覧可 | リポジトリが肥大化（`outputs_real_fast/daily.csv` だけで 3,000 行超）。差分ノイズが大きい |
-| **B. `.gitignore` 化（成果物を追跡外に）** | リポジトリが軽量・差分がクリーン | clone 後に再実行しないと図表が無い。**レポート閲覧用 figures は別扱いの検討が必要** |
-| **C. 折衷** | レポート表示に必要な `figures/`・`REPORT.md` は追跡、肥大化する `outputs_real_fast/`・生 CSV は ignore | ルールがやや複雑 |
+### 追跡を維持（GitHub 上でレポートを表示するのに必要）
+- `signal_report/figures/*.png` … `REPORT.md` に埋め込み
+- `signal_report/data/{results.csv,summary.json}` … ① の主要データ出力（モダレートなサイズ・README が明示）
+- `signal_report/report.html` / ルート `index.html` … レポートの HTML 版
+- `nikkei_leverage_sim/outputs_real_fast/*.png` … `REPORT_REAL.md` に埋め込み
+- `nikkei_leverage_sim/outputs_real_fast/summary.json` … 小さく、レポートが参照
 
-> 推奨は **C（折衷）**。ただし「レポートを GitHub/モバイルでそのまま読む」という
-> 本リポジトリの設計思想（README 参照）を踏まえると、表示用の図表は残す価値が高い。
-> 方針が決まり次第このセクションを更新する。
+### 追跡外（`.gitignore` 化・再生成可能で埋め込みなし）
+- `nikkei_leverage_sim/outputs/`（人工データのデモ一式）… **元々 `.gitignore` 済みだったが追跡されていた**矛盾を解消
+- `nikkei_leverage_sim/outputs_real_fast/*.csv`（daily / optimization / trades、計 約 1.1MB の生データ羅列）
+
+> 判断理由: PNG はレポートの図として GitHub 上で必要なので残す。一方、行数の多い CSV は
+> `cli run` で再生成でき、どのレポートにも埋め込まれていないため追跡外にしてリポジトリを軽量化した。
+> ① の `data/` は ② の CSV ほど大きくなく、README が明示的な成果物として扱っているため維持。
 
 ## 実施チェックリスト
 
-- [ ] GitHub Pages の配信元設定を確認（`index.html` をルートに残すか判断）
-- [ ] `git mv` で ① を `signal_report/` へ移動
-- [ ] リポジトリ全体の新 `README.md` を作成
-- [ ] 移動後に `REPORT.md` の画像・`index.html` のリンク表示を確認
-- [ ] 生成物の扱い（A/B/C）を決定し反映
-- [ ] `signal_report/README.md` 内のパス記述（`backtest/data/...` 等）を必要に応じて更新
+- [x] `git mv` で ① を `signal_report/` へ移動（履歴保持）
+- [x] `index.html` はルートに残置（GitHub Pages 保護）
+- [x] リポジトリ全体の新 `README.md` を作成（2 プロジェクトへ誘導）
+- [x] `REPORT.md` の画像参照（相対 `figures/*.png`）が移動後も解決することを確認
+- [x] 文書内のパス記述（旧 `backtest/...` → `signal_report/...`）を更新。生成元 `backtest.py` の
+      テンプレートも合わせて修正し、再生成時も正しいパスになるようにした
+- [x] 追跡されていた stale な `__pycache__/*.pyc` を削除（`.gitignore` 済み）
+- [x] 生成物の扱いを **C（折衷）** に決定し反映（上記セクション参照、`.gitignore` 更新・大きな CSV を追跡解除）
+- [ ] **要確認（ユーザー）**: GitHub Pages の配信元設定を Settings → Pages で確認（`index.html` がルート配信か）

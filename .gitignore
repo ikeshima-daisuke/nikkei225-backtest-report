@@ -14,5 +14,9 @@ nikkei_leverage_sim/data/
 nikkei_leverage_sim/outputs_real/
 nikkei_leverage_sim/outputs/
 
+# Large raw CSV dumps under outputs_real_fast/ are regenerable and not embedded
+# in any report (only the PNGs + summary.json are tracked for REPORT_REAL.md).
+nikkei_leverage_sim/outputs_real_fast/*.csv
+
 # Local analysis helper scripts
 nikkei_leverage_sim/analyze_daily.py

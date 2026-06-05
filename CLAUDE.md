@@ -9,25 +9,27 @@
 
 | プロジェクト | 場所 | 内容 |
 |---|---|---|
-| **① シグナル探索レポート** | リポジトリルート直下 | `^N225` の押し目買いシグナル候補を 5 年分で網羅探索（1,350 通り）し、Markdown/HTML レポートを生成 |
+| **① シグナル探索レポート** | `signal_report/` | `^N225` の押し目買いシグナル候補を 5 年分で網羅探索（1,350 通り）し、Markdown/HTML レポートを生成 |
 | **② レバレッジ ETF シミュレータ** | `nikkei_leverage_sim/` | 日経レバ ETF（1570.T）の「信用ロング・損切りなし・毎日積立・利確」戦略のバックテスター（src レイアウト + pytest） |
 
-> 📁 **整理予定**: ① をルートから `signal_report/` へ移す対称モノレポ化を計画中。
-> 詳細と未決事項は `MIGRATION.md` を参照。**現状はまだ ① がルート直下にある**ので、
-> パスはこのファイルの記述に従うこと。
+リポジトリルートには両プロジェクトへ誘導する `README.md`、GitHub Pages ランディングの
+`index.html`、本ガイド、`MIGRATION.md` のみを置く（対称モノレポ構成）。整理の経緯は `MIGRATION.md` を参照。
 
-## ① シグナル探索レポート（ルート直下）
+## ① signal_report/
 
-### 主要ファイル
+### 主要ファイル（すべて `signal_report/` 配下）
 - `backtest.py` — データ取得 + 全コンビ探索 + 全出力生成（CSV / JSON / PNG / REPORT.md / report.html）
 - `indicators.py` — 指標・シグナル定義（ベクトル化）
 - `REPORT.md` — **主要アウトプット**（GitHub / モバイルでそのまま閲覧）。`figures/*.png` を相対参照
-- `report.html` / `index.html` — Plotly インタラクティブ版（自己完結 HTML）。`index.html` は GitHub Pages ランディング
+- `report.html` — Plotly インタラクティブ版（自己完結 HTML、ローカル閲覧用）
 - `data/` — `results.csv`（全集計）, `summary.json`（上位戦略）
 - `figures/` — matplotlib 製の静的 PNG（REPORT.md から参照）
 
-### 実行
+※ ルートの `index.html` は ① のレポートを GitHub Pages で配信するための自己完結 HTML ランディング。
+
+### 実行（必ず `signal_report/` 内で）
 ```bash
+cd signal_report
 pip install -r requirements.txt
 python backtest.py                 # 既定の出力先は backtest.py と同じディレクトリ
 python backtest.py --out-dir DIR   # 出力先を変更
@@ -36,7 +38,7 @@ python backtest.py --out-dir DIR   # 出力先を変更
 
 ### 注意
 - 手数料・税・配当・スリッページは**未考慮の理論値**。多重比較による偽陽性に注意し、OOS 列を必ず併読する。
-- `index.html` を動かすと GitHub Pages の公開 URL が壊れる可能性がある（Settings → Pages を要確認）。
+- `index.html` はルートに固定。動かすと GitHub Pages の公開 URL が壊れる可能性がある（Settings → Pages を要確認）。
 
 ## ② nikkei_leverage_sim/
 
@@ -72,7 +74,7 @@ pytest -q                        # 33 tests, 外部通信なし
 ## 全体的な作業方針
 
 - 2 つのプロジェクトは独立。一方を触る変更が他方に波及しないようにする。
-- ① と ② で依存関係ファイルが別（ルート `requirements.txt` / `nikkei_leverage_sim/pyproject.toml`）。混同しない。
+- ① と ② で依存関係ファイルが別（`signal_report/requirements.txt` / `nikkei_leverage_sim/pyproject.toml`）。混同しない。
 - 生成物（`data/`, `figures/`, `outputs*/`）の追跡方針は未確定（`MIGRATION.md` の「未決事項」参照）。
   大量の生成物を新規にコミットする前に方針を確認する。
 - レポートは「GitHub / モバイルでそのまま読む」ことを重視した設計。Markdown と相対パス画像の表示を壊さない。
