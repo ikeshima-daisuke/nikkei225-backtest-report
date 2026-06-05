@@ -1,0 +1,53 @@
+initial_equity: 100000000
+max_gross_exposure: 10000000
+maintenance_margin_ratio: 0.30
+warning_margin_ratio: 0.50
+force_liquidation: false
+
+commission_bps: 0.0
+slippage_bps: 2.0
+annual_margin_interest_rate: 0.028
+tax_rate: 0.20315
+
+optimization:
+  enabled: true
+  method: random
+  random_seed: 42
+  n_trials: 100
+  lookback_days: 252
+  min_train_days: 200
+  apply_days: 1
+  rebalance_frequency: daily
+
+execution:
+  signal_timing: close_t
+  execution_timing: next_open
+  valuation_price: close
+
+strategy:
+  default_params:
+    base_buy_amount: 200000
+    max_daily_buy_amount: 1000000
+    score_threshold: 0.0
+    score_scale: 2.0
+    w_drawdown: 2.5
+    w_rsi: 1.5
+    w_ma_gap_25: 1.5
+    w_ret_5: 1.0
+    w_trend: 0.5
+    w_vol: 2.0
+    w_exposure: 5.0
+    w_unrealized_loss: 5.0
+    fixed_profit_yen: 5000
+    base_take_profit_pct: 0.006
+    min_take_profit_pct: 0.002
+    exposure_tp_sensitivity: 0.5
+    vol_tp_multiplier: 1.0
+
+objective:
+  weight_max_drawdown_equity: 0.5
+  weight_max_unrealized_loss: 0.5
+  margin_call_penalty: 1000000
+  exposure_limit_hit_penalty: 100000
+  no_take_profit_streak_penalty: 50000
+  no_take_profit_grace_days: 20
