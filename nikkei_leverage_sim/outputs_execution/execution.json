@@ -1,0 +1,126 @@
+{
+  "meta": {
+    "initial_equity": 100000000,
+    "random_seed": 42,
+    "sessions": 3032,
+    "data_repairs": [
+      {
+        "series": "target",
+        "date": "2021-04-27",
+        "original_close": 8040.0,
+        "repaired_close": 16250.0
+      },
+      {
+        "series": "target",
+        "date": "2021-04-28",
+        "original_close": 8070.0,
+        "repaired_close": 16250.0
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "name": "baseline (next_open)",
+      "overrides": {},
+      "net_realized_after_tax": 9988026.162517307,
+      "final_equity": 109988026.16251731,
+      "max_drawdown_equity": 5256961.116209686,
+      "max_unrealized_loss": 5281310.919561644,
+      "average_gross_exposure": 2991047.920514512,
+      "buy_trade_count": 1048,
+      "sell_trade_count": 1048,
+      "forced_liquidations": 0,
+      "min_maintenance_ratio": 9.75888379905126
+    },
+    {
+      "name": "VWAP proxy",
+      "overrides": {
+        "fill_model": "vwap"
+      },
+      "net_realized_after_tax": 10151303.23413117,
+      "final_equity": 110151303.23413117,
+      "max_drawdown_equity": 5540995.124175683,
+      "max_unrealized_loss": 5492968.641198629,
+      "average_gross_exposure": 3048619.492084433,
+      "buy_trade_count": 1054,
+      "sell_trade_count": 1054,
+      "forced_liquidations": 0,
+      "min_maintenance_ratio": 9.764299278151116
+    },
+    {
+      "name": "adverse (High/Low)",
+      "overrides": {
+        "fill_model": "adverse"
+      },
+      "net_realized_after_tax": 6571622.013154889,
+      "final_equity": 106571622.0131549,
+      "max_drawdown_equity": 6055499.45053792,
+      "max_unrealized_loss": 6007316.294205479,
+      "average_gross_exposure": 3842921.6771108177,
+      "buy_trade_count": 956,
+      "sell_trade_count": 956,
+      "forced_liquidations": 0,
+      "min_maintenance_ratio": 9.326754772284538
+    },
+    {
+      "name": "delay +1 day",
+      "overrides": {
+        "execution_delay_days": 1
+      },
+      "net_realized_after_tax": 10710240.083114607,
+      "final_equity": 110710240.08311461,
+      "max_drawdown_equity": 5005786.685478717,
+      "max_unrealized_loss": 4920168.338986301,
+      "average_gross_exposure": 3292186.8585092346,
+      "buy_trade_count": 1012,
+      "sell_trade_count": 1012,
+      "forced_liquidations": 0,
+      "min_maintenance_ratio": 9.582970088737177
+    },
+    {
+      "name": "delay +3 days",
+      "overrides": {
+        "execution_delay_days": 3
+      },
+      "net_realized_after_tax": 12015856.53559625,
+      "final_equity": 112039873.22052775,
+      "max_drawdown_equity": 4466911.2991105765,
+      "max_unrealized_loss": 4393604.395876711,
+      "average_gross_exposure": 3624684.0550791556,
+      "buy_trade_count": 966,
+      "sell_trade_count": 964,
+      "forced_liquidations": 0,
+      "min_maintenance_ratio": 9.3142328145612
+    },
+    {
+      "name": "partial 0.5% volume",
+      "overrides": {
+        "volume_participation": 0.005
+      },
+      "net_realized_after_tax": 9988026.162517307,
+      "final_equity": 109988026.16251731,
+      "max_drawdown_equity": 5256961.116209686,
+      "max_unrealized_loss": 5281310.919561644,
+      "average_gross_exposure": 2991047.920514512,
+      "buy_trade_count": 1048,
+      "sell_trade_count": 1048,
+      "forced_liquidations": 0,
+      "min_maintenance_ratio": 9.75888379905126
+    },
+    {
+      "name": "partial 0.001% volume",
+      "overrides": {
+        "volume_participation": 1e-05
+      },
+      "net_realized_after_tax": 9973412.259931086,
+      "final_equity": 109973412.25993109,
+      "max_drawdown_equity": 5220566.7095917165,
+      "max_unrealized_loss": 5244003.702356164,
+      "average_gross_exposure": 2979864.52176781,
+      "buy_trade_count": 1052,
+      "sell_trade_count": 1052,
+      "forced_liquidations": 0,
+      "min_maintenance_ratio": 9.760797725915479
+    }
+  ]
+}

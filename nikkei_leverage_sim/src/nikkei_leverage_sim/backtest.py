@@ -34,6 +34,28 @@ from . import strategy as strat
 # Indicator keys the strategy needs each day.
 _IND_KEYS = ("drawdown_252", "RSI_14", "ma_gap_25", "ret_5", "ma_gap_200", "vol_20")
 
+_FILL_MODELS = ("next_open", "vwap", "adverse")
+
+
+def _exec_fill_prices(
+    model: str, open_p: float, high_p: float, low_p: float, close_p: float, slip: float
+) -> tuple[float, float]:
+    """Return ``(buy_fill, sell_fill)`` for the execution day under ``model``.
+
+    All models use only the *execution day's* own bar (a decision made at the
+    prior close never sees future data, so the look-ahead invariant holds).
+
+    * ``next_open`` — open*(1±slip); fills depend only on the open (default).
+    * ``vwap``      — ((O+H+L+C)/4)*(1±slip); a VWAP proxy over the day.
+    * ``adverse``   — buy at High*(1+slip), sell at Low*(1-slip); worst-case fill.
+    """
+    if model == "vwap":
+        mid = (open_p + high_p + low_p + close_p) / 4.0
+        return mid * (1.0 + slip), mid * (1.0 - slip)
+    if model == "adverse":
+        return high_p * (1.0 + slip), low_p * (1.0 - slip)
+    return open_p * (1.0 + slip), open_p * (1.0 - slip)  # next_open
+
 
 @dataclass(slots=True)
 class MarketData:
@@ -48,6 +70,9 @@ class MarketData:
     ind_rows: List[Dict[str, float]]
     valid: np.ndarray              # bool mask: indicators present -> tradable
     n: int
+    target_high: np.ndarray = field(default_factory=lambda: np.empty(0))
+    target_low: np.ndarray = field(default_factory=lambda: np.empty(0))
+    target_volume: np.ndarray = field(default_factory=lambda: np.empty(0))
     data_repairs: List[Dict[str, Any]] = field(default_factory=list)
 
 
@@ -80,6 +105,9 @@ def prepare_market_data(joined: pd.DataFrame, cfg: Config) -> MarketData:
         ind_rows=ind_rows,
         valid=valid,
         n=n,
+        target_high=df["target_high"].to_numpy(dtype=float),
+        target_low=df["target_low"].to_numpy(dtype=float),
+        target_volume=df["target_volume"].to_numpy(dtype=float),
         data_repairs=list(getattr(joined, "attrs", {}).get("data_repairs", []) or []),
     )
 
@@ -168,7 +196,25 @@ def simulate(
     slip = cfg.slippage_bps / 10_000.0
     max_gross = cfg.max_gross_exposure
 
-    pending: Optional[Decision] = None
+    # Execution-realism settings (D2).  Defaults reproduce the original
+    # next-open, full-fill, zero-delay behaviour bit-for-bit.
+    fill_model = cfg.execution.fill_model
+    if fill_model not in _FILL_MODELS:
+        raise ValueError(f"Unknown fill_model {fill_model!r}; expected one of {_FILL_MODELS}")
+    participation = cfg.execution.volume_participation
+    exec_delay = int(cfg.execution.execution_delay_days)
+    if exec_delay < 0:
+        raise ValueError("execution_delay_days must be >= 0")
+    has_hl = md.target_high.size == md.n and md.target_low.size == md.n
+    has_vol = md.target_volume.size == md.n
+
+    # Decisions scheduled by execution-day index (supports latency).  At delay 0
+    # a decision made at close i is keyed to i+1 (next open), as before.
+    pending_by_exec: Dict[int, Decision] = {}
+    # Index at which an in-flight forced liquidation will execute (None = none).
+    # While set, no new decisions are scheduled (the broker is liquidating), so a
+    # delayed forced close cannot be postponed forever or accumulate fresh buys.
+    forced_exec_idx: Optional[int] = None
     daily_rows: List[Dict[str, Any]] = []
     trades: List[Dict[str, Any]] = []
     tp_flags: List[bool] = []
@@ -189,12 +235,25 @@ def simulate(
         day_events: List[str] = []
         exec_params_id = -1
 
-        # --- 1. Execute the decision made at the previous close, at open_i ---
+        # --- 1. Execute the decision scheduled for this day, at open_i ---
+        pending = pending_by_exec.pop(i, None)
         if pending is not None:
             exec_params_id = pending.params_id
-            sell_price = open_p * (1.0 - slip)
+            high_p = md.target_high[i] if has_hl else open_p
+            low_p = md.target_low[i] if has_hl else open_p
+            buy_price, sell_price = _exec_fill_prices(
+                fill_model, open_p, high_p, low_p, md.target_close[i], slip
+            )
+            # A forced liquidation closes the ENTIRE book that exists at execution
+            # time (not a stale decision-time snapshot), so lots opened during a
+            # latency window are also liquidated.
+            if pending.forced:
+                forced_exec_idx = None
+                sell_ids = list(lot_by_id.keys())
+            else:
+                sell_ids = pending.sell_lot_ids
             forced_closes = 0
-            for lid in pending.sell_lot_ids:
+            for lid in sell_ids:
                 lot = lot_by_id.get(lid)
                 if lot is None:
                     continue
@@ -219,7 +278,6 @@ def simulate(
 
             # Buy after sells (sells free up exposure capacity).
             if pending.buy_amount > 0.0:
-                buy_price = open_p * (1.0 + slip)
                 capacity = max(0.0, max_gross - pf.gross_exposure())
                 desired_shares = math.floor(pending.buy_amount / buy_price)
                 capped = min(pending.buy_amount, capacity)
@@ -227,6 +285,13 @@ def simulate(
                 if desired_shares > shares and desired_shares >= 1:
                     pf.exposure_limit_hit_count += 1
                     day_events.append("exposure_limit_hit")
+                # Volume-participation partial fill (buy side): cap shares at a
+                # fraction of the execution day's volume.
+                if participation < 1.0 and has_vol:
+                    vol_cap = int(math.floor(participation * md.target_volume[i]))
+                    if shares > vol_cap:
+                        shares = max(vol_cap, 0)
+                        day_events.append("partial_fill")
                 if shares >= 1:
                     lot = pf.buy(i, date_i, shares, buy_price)
                     if lot is not None:
@@ -260,7 +325,15 @@ def simulate(
         # forced liquidation is disabled; only forces a liquidation (next open)
         # when ``force_liquidation`` is enabled and the book is non-empty.
         margin_breach = pf.force_liquidation_check()
-        force_now = margin_breach and cfg.force_liquidation and bool(pf.lots)
+        # Only trigger a *new* forced liquidation when one is not already in
+        # flight (so a delayed liquidation is scheduled once, not every day it
+        # stays in breach during the latency window).
+        force_now = (
+            margin_breach
+            and cfg.force_liquidation
+            and bool(pf.lots)
+            and forced_exec_idx is None
+        )
         if margin_breach:
             day_events.append("margin_call")
             if force_now:
@@ -307,25 +380,33 @@ def simulate(
                 }
             )
 
-        # --- 3. Decide for the next day using day-i close information ---
-        # A forced liquidation is a *system* event and takes precedence: close
-        # the entire book at the next open (realizing losses too).
-        if force_now:
-            pending = Decision(
+        # --- 3. Decide for a future day using day-i close information ---
+        # Execution lands at open_{i+1+exec_delay} (next open plus any latency).
+        exec_idx = i + 1 + exec_delay
+        if forced_exec_idx is not None:
+            # A forced liquidation is already in flight: the broker is taking the
+            # book down.  Schedule nothing new (no fresh buys) and do not reschedule
+            # the forced close (so a delayed liquidation cannot be postponed).
+            pass
+        elif force_now:
+            # System event takes precedence: cancel all outstanding orders and
+            # schedule a full-book forced close (the actual lot set is resolved at
+            # execution time, above).
+            pending_by_exec.clear()
+            pending_by_exec[exec_idx] = Decision(
                 buy_amount=0.0,
-                sell_lot_ids=[lot.lot_id for lot in pf.lots],
+                sell_lot_ids=[],
                 params_id=exec_params_id,
                 forced=True,
             )
+            forced_exec_idx = exec_idx
         elif md.valid[i]:
             params = get_params(i)
             pid = pid_map.get(id(params))
             if pid is None:
                 pid = len(pid_map)
                 pid_map[id(params)] = pid
-            pending = _decide(pf, md, i, params, pid)
-        else:
-            pending = None
+            pending_by_exec[exec_idx] = _decide(pf, md, i, params, pid)
 
     equity_curve = pf.equity_curve
     grace = cfg.objective.no_take_profit_grace_days

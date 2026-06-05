@@ -75,6 +75,19 @@ class ExecutionConfig:
     signal_timing: str = "close_t"
     execution_timing: str = "next_open"
     valuation_price: str = "close"  # "close" | "adj_close"
+    # --- Execution-realism model (D2) ---
+    # fill_model: how the execution price is formed on the execution day.
+    #   "next_open" (default) — open * (1 ± slippage); fills use only the open, so
+    #                           the no-look-ahead guarantee is unchanged.
+    #   "vwap"      — ((O+H+L+C)/4) * (1 ± slippage); a VWAP proxy over the day.
+    #   "adverse"   — buy at High*(1+slip), sell at Low*(1-slip); worst-case fill.
+    fill_model: str = "next_open"
+    # volume_participation < 1.0 caps BUY shares at participation * day volume
+    # (a partial-fill model for the accumulation side; sells stay whole-lot).
+    volume_participation: float = 1.0
+    # execution_delay_days adds latency beyond the standard next-open execution
+    # (0 = decide at close_t, fill at open_{t+1}; 1 = fill at open_{t+2}, ...).
+    execution_delay_days: int = 0
 
 
 @dataclass

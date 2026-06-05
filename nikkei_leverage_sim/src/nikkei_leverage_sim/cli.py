@@ -279,6 +279,54 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_execmodel(args: argparse.Namespace) -> int:
+    """Execution-model realism comparison (D2)."""
+    from .optimizer import WalkForwardOptimizer
+    from . import execution as exec_mod
+
+    cfg = load_config(args.config)
+    if args.seed is not None:
+        cfg.optimization.random_seed = int(args.seed)
+
+    if args.synthetic:
+        target_df, benchmark_df = make_synthetic_data(
+            n_days=args.synthetic_days, seed=args.synthetic_seed
+        )
+        joined = join_target_benchmark(target_df, benchmark_df)
+    else:
+        if not args.target or not args.benchmark:
+            print("error: --target and --benchmark CSVs are required (or --synthetic)", file=sys.stderr)
+            return 2
+        joined = load_market_data(args.target, args.benchmark)
+
+    md = prepare_market_data(joined, cfg)
+    print("Capturing walk-forward parameter sequence (baseline) ...", flush=True)
+    opt = WalkForwardOptimizer(md, cfg)
+    param_seq = [opt.params_at_close(i) for i in range(md.n)]
+    provider = lambda i: param_seq[i]  # noqa: E731
+
+    print("Replaying under each execution scenario ...", flush=True)
+    cells = exec_mod.compare_execution(md, cfg, provider)
+
+    meta = {
+        "initial_equity": cfg.initial_equity,
+        "random_seed": cfg.optimization.random_seed,
+        "sessions": md.n,
+        "data_repairs": list(md.data_repairs),
+    }
+    exec_mod.write_execution_outputs(args.out, cells, meta=meta)
+
+    print(f"\nDone. Execution comparison written to {Path(args.out).resolve()}")
+    base = cells[0].net_realized_after_tax
+    for c in cells:
+        delta = (c.net_realized_after_tax - base) / base * 100.0 if base else 0.0
+        print(
+            f"  {c.name:<24} net ¥{c.net_realized_after_tax:>12,.0f} "
+            f"({delta:+6.1f}% vs baseline)  forced={c.forced_liquidations}"
+        )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="nikkei_leverage_sim",
@@ -365,6 +413,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_val.add_argument("--synthetic-days", type=int, default=900)
     p_val.add_argument("--synthetic-seed", type=int, default=7)
     p_val.set_defaults(func=_cmd_validate)
+
+    p_exec = sub.add_parser(
+        "execmodel", help="Execution-model realism comparison (VWAP/adverse/delay/partial)"
+    )
+    p_exec.add_argument("--config", required=True)
+    p_exec.add_argument("--target", help="Target ETF OHLCV CSV path")
+    p_exec.add_argument("--benchmark", help="Benchmark OHLCV CSV path")
+    p_exec.add_argument("--out", default="outputs_execution/")
+    p_exec.add_argument("--seed", type=int, default=None, help="Override optimization.random_seed")
+    p_exec.add_argument("--synthetic", action="store_true", help="Use synthetic data")
+    p_exec.add_argument("--synthetic-days", type=int, default=900)
+    p_exec.add_argument("--synthetic-seed", type=int, default=7)
+    p_exec.set_defaults(func=_cmd_execmodel)
 
     return parser
 
