@@ -14,7 +14,9 @@ matplotlib.use("Agg")  # headless backend (no display needed)
 import matplotlib.pyplot as plt  # noqa: E402
 
 from .backtest import BacktestResult
-from .metrics import build_summary, max_drawdown_abs
+from .benchmark import build_benchmarks
+from .metrics import build_summary, daily_returns, max_drawdown_abs
+from .report import render_report_md
 
 _DAILY_COLUMNS = [
     "date",
@@ -90,6 +92,32 @@ def write_outputs(result: BacktestResult, out_dir: str | Path) -> Dict[str, Any]
     _write_optimization_csv(result.optimization_rows, out / "optimization.csv")
 
     _write_charts(result, daily, out)
+
+    # --- Passive benchmarks + structured Markdown report (Week 1, item F) ---
+    n_days = len(daily)
+    benchmarks = build_benchmarks(
+        daily["target_close"].tolist() if not daily.empty else [],
+        daily["benchmark_close"].tolist() if not daily.empty else [],
+        result.config.initial_equity,
+        n_days,
+    )
+    period_start = period_end = ""
+    if not daily.empty:
+        dates = pd.to_datetime(daily["date"])
+        period_start = dates.iloc[0].strftime("%Y-%m-%d")
+        period_end = dates.iloc[-1].strftime("%Y-%m-%d")
+    report_md = render_report_md(
+        summary,
+        benchmarks,
+        period_start=period_start,
+        period_end=period_end,
+        n_sessions=n_days,
+    )
+    (out / "report.md").write_text(report_md, encoding="utf-8")
+    (out / "benchmarks.json").write_text(
+        json.dumps([b.to_dict() for b in benchmarks], indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
     return summary
 
 
@@ -179,6 +207,35 @@ def _write_charts(result: BacktestResult, daily: pd.DataFrame, out: Path) -> Non
     fig.tight_layout()
     fig.savefig(out / "realized_profit_by_day.png", dpi=110)
     plt.close(fig)
+
+    # Underwater curve (draw-down as a percentage of the running peak).
+    with np.errstate(divide="ignore", invalid="ignore"):
+        peak = np.maximum.accumulate(equity)
+        dd_pct = np.where(peak > 0, (equity - peak) / peak * 100.0, 0.0)
+    fig, ax = plt.subplots(figsize=(11, 5))
+    ax.fill_between(dates, dd_pct, 0, color="#9467bd", alpha=0.5)
+    ax.set_title(f"Underwater curve (max {dd_pct.min():.1f}%)")
+    ax.set_ylabel("Draw-down (%)")
+    ax.grid(True, alpha=0.3)
+    fig.tight_layout()
+    fig.savefig(out / "underwater_curve.png", dpi=110)
+    plt.close(fig)
+
+    # Daily-return distribution (where the tail risk lives).
+    rets = daily_returns(equity) * 100.0
+    if rets.size:
+        fig, ax = plt.subplots(figsize=(11, 5))
+        ax.hist(rets, bins=60, color="#1f77b4", alpha=0.8)
+        var95 = float(np.quantile(rets, 0.05))
+        ax.axvline(var95, color="red", linestyle="--", label=f"VaR95 {var95:.2f}%")
+        ax.set_title("Daily equity-return distribution")
+        ax.set_xlabel("Daily return (%)")
+        ax.set_ylabel("Frequency")
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        fig.tight_layout()
+        fig.savefig(out / "return_distribution.png", dpi=110)
+        plt.close(fig)
 
 
 def _jsonable(obj: Any) -> Any:

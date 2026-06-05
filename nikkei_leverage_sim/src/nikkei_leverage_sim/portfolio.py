@@ -121,28 +121,34 @@ class Portfolio:
     def maintenance_ratio(self) -> float:
         """Broker-style 委託保証金維持率 used for the forced-liquidation (追証) check.
 
-        ``maintenance_ratio = (cash_buffer + unrealized_pnl) / gross_position``
+        ``maintenance_ratio = (own_funds + min(unrealized_pnl, 0)) / gross_position``
 
-        where ``cash_buffer = initial_equity - total_interest_paid - total_tax_paid``
-        (own funds net of financing/tax costs already paid) and ``gross_position``
-        is the current mark-to-market value of all open lots.  Returns ``inf``
-        when the book is flat (no position -> never a margin call).
+        where ``own_funds = initial_equity + realized_after_tax`` is the current
+        deposited collateral (the initial margin **plus realized P&L, so realized
+        losses from a prior forced close reduce it** — and net of the financing
+        and tax already booked into realized P&L), and ``gross_position`` is the
+        current mark-to-market value of all open lots.  Only *unrealized losses*
+        count against collateral (paper gains are excluded, the conservative
+        Japanese 維持率 convention); open-lot financing cost is already inside
+        ``unrealized_pnl``.  Returns ``inf`` when the book is flat.
 
-        Note (deliberate deviation from the literal Week-0.5 brief): the brief
-        wrote the numerator as ``cash_buffer + unrealized_pnl + gross_position``.
-        That extra ``+ gross_position`` makes the ratio ``>= 1`` for any positive
-        own funds, so a 30%% maintenance threshold could never trigger — it is
-        the standard Japanese 委託保証金維持率 (= collateral / position) that the
-        existing ``maintenance_margin_ratio = 0.30`` setting is designed for, so
-        the spurious term is dropped here.  See ``force_liquidation_check``.
+        Design notes:
+        * Deliberate deviation from the literal Week-0.5 brief, which wrote the
+          numerator as ``... + gross_position``.  That extra term makes the ratio
+          ``>= 1`` for any positive own funds, so a 30%% threshold could never
+          trigger; it is dropped (the standard 維持率 = collateral / position).
+        * The collateral uses ``own_funds`` (= ``cash()``), not the old
+          ``initial_equity - total_interest_paid - total_tax_paid`` buffer, which
+          both *ignored realized losses* (overstating margin after a forced close)
+          and *double-counted open-lot interest* (subtracted once here and again
+          inside ``unrealized_pnl``).  Stricter than ``margin_ratio`` because it
+          excludes unrealized gains from collateral.
         """
         ge = self.gross_exposure()
         if ge <= 0.0:
             return math.inf
-        cash_buffer = (
-            self.cfg.initial_equity - self.total_interest_paid - self.total_tax_paid
-        )
-        return (cash_buffer + self.unrealized_pnl()) / ge
+        own_funds = self.cash()  # initial_equity + realized_after_tax
+        return (own_funds + min(self.unrealized_pnl(), 0.0)) / ge
 
     def force_liquidation_check(self) -> bool:
         """Daily post-close maintenance check (追証 / forced loss-cut).

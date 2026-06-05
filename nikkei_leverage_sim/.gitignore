@@ -12,3 +12,12 @@ data/*.csv
 # cache (a self-produced pickle) and the bulky per-row JSON dumps (CSV is canonical).
 outputs_variants/wf_params.pkl
 outputs_variants/*/rows.json
+
+# Margin-call scenarios: keep summary.json / plots / report, drop the bulky
+# regenerable per-row CSVs (regenerate via the CLI / verify_margin_call.py).
+outputs_margincall/*/daily.csv
+outputs_margincall/*/trades.csv
+outputs_margincall/*/optimization.csv
+
+# Local virtualenv
+.venv/

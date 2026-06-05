@@ -1,0 +1,90 @@
+{
+  "meta": {
+    "initial_equity": 100000000,
+    "random_seed": 42,
+    "sessions": 3032,
+    "params": "default",
+    "data_repairs": [
+      {
+        "series": "target",
+        "date": "2021-04-27",
+        "original_close": 8040.0,
+        "repaired_close": 16250.0
+      },
+      {
+        "series": "target",
+        "date": "2021-04-28",
+        "original_close": 8070.0,
+        "repaired_close": 16250.0
+      }
+    ]
+  },
+  "segment_consistency": {
+    "n_splits": 5,
+    "note": "contiguous-segment annualized returns of the fixed strategy; a consistency check, not train/test CV",
+    "segment_annualized_returns": [
+      -0.0026481954737482827,
+      0.006644149591209514,
+      0.0036732302305715336,
+      0.0034750069286422214,
+      0.002441116196126636
+    ],
+    "mean": 0.0027170614945603243,
+    "std": 0.0030256532846751082
+  },
+  "permutation": {
+    "metric_name": "net_realized_after_tax",
+    "observed": 3362857.5615223986,
+    "p_value": 0.7412935323383084,
+    "n_perm": 200,
+    "null_mean": 3642563.4445448727,
+    "null_p95": 4311588.8982540835,
+    "seed": 42
+  },
+  "bootstrap_ci": {
+    "metric_name": "annualized_return",
+    "point_estimate": 0.0027528011764126337,
+    "ci_low": 0.000504313060582612,
+    "ci_high": 0.005036549489341785,
+    "confidence": 0.95,
+    "n_boot": 500,
+    "block_size": 20,
+    "seed": 42
+  },
+  "fdr": {
+    "alpha": 0.1,
+    "threshold": 0.0,
+    "results": [
+      {
+        "base_take_profit_pct": 0.004,
+        "observed": 3291977.812159704,
+        "p_value": 0.7425742574257426,
+        "reject_at_fdr": false
+      },
+      {
+        "base_take_profit_pct": 0.006,
+        "observed": 3362857.5615223986,
+        "p_value": 0.7425742574257426,
+        "reject_at_fdr": false
+      },
+      {
+        "base_take_profit_pct": 0.008,
+        "observed": 3454489.2269177036,
+        "p_value": 0.7425742574257426,
+        "reject_at_fdr": false
+      },
+      {
+        "base_take_profit_pct": 0.01,
+        "observed": 3536643.404036399,
+        "p_value": 0.7128712871287128,
+        "reject_at_fdr": false
+      },
+      {
+        "base_take_profit_pct": 0.015,
+        "observed": 3665623.8425405174,
+        "p_value": 0.7623762376237624,
+        "reject_at_fdr": false
+      }
+    ]
+  }
+}

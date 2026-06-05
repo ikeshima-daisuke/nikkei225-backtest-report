@@ -10,6 +10,9 @@ from __future__ import annotations
 import math
 from typing import Dict, List, Sequence
 
+import numpy as np
+from scipy import stats
+
 from .config import Config
 
 
@@ -59,17 +62,27 @@ def objective_score(result: "SimResultLike", cfg: Config) -> float:
 
     ``score = realized_after_tax + ending_unrealized_pnl``
     ``      - w_dd * max_drawdown_equity - w_ul * max_unrealized_loss``
-    ``      - margin_call_penalty * margin_call_count``
+    ``      - margin_call_penalty * margin_call_count   (only when force_liquidation)``
     ``      - exposure_penalty * exposure_limit_hit_count``
     ``      - no_tp_penalty * no_take_profit_streak_penalty``
+
+    The margin-call term is applied **only when ``cfg.force_liquidation`` is on**.
+    Per the project invariant, institutional events (追証) are recording-only and
+    must not steer strategy/parameter selection *unless* forced liquidation is
+    enabled — in which case a breach really does force a loss, so the optimizer is
+    allowed to avoid it.  When the model is off, ``margin_call_count`` is still
+    recorded for reporting but carries no objective weight.
     """
     o = cfg.objective
+    margin_call_term = (
+        o.margin_call_penalty * result.margin_call_count if cfg.force_liquidation else 0.0
+    )
     return (
         result.realized_after_tax
         + result.ending_unrealized_pnl
         - o.weight_max_drawdown_equity * result.max_drawdown_equity
         - o.weight_max_unrealized_loss * result.max_unrealized_loss
-        - o.margin_call_penalty * result.margin_call_count
+        - margin_call_term
         - o.exposure_limit_hit_penalty * result.exposure_limit_hit_count
         - o.no_take_profit_streak_penalty * result.no_tp_streak_penalty
     )
@@ -95,7 +108,7 @@ def sharpe_like(daily_equity: Sequence[float]) -> float:
 
 def annualized_return(equity_curve: Sequence[float], n_trading_days: int) -> float:
     """Compound annual growth rate of the equity curve."""
-    if not equity_curve or n_trading_days <= 0:
+    if len(equity_curve) == 0 or n_trading_days <= 0:
         return 0.0
     start = equity_curve[0]
     end = equity_curve[-1]
@@ -105,6 +118,182 @@ def annualized_return(equity_curve: Sequence[float], n_trading_days: int) -> flo
     if years <= 0:
         return 0.0
     return (end / start) ** (1.0 / years) - 1.0
+
+
+# ---------------------------------------------------------------------------
+# Tail-risk / draw-down metrics (Week 1 — "measure how bad it can get").
+#
+# All operate on the *daily equity curve*, which already reflects positions,
+# cash, accrued interest and unrealized P&L — satisfying the methodology rule
+# that risk must be computed on a position/cash/valuation basis, not on a naive
+# price-return series.  They are dependency-light (numpy + scipy.stats only) and
+# never raise on short/degenerate input (return a neutral 0.0).
+# ---------------------------------------------------------------------------
+
+
+def daily_returns(equity_curve: Sequence[float]) -> np.ndarray:
+    """Simple daily returns of the equity curve.
+
+    Steps where the prior equity is non-positive (or the result is non-finite)
+    are dropped, mirroring :func:`sharpe_like`.
+    """
+    arr = np.asarray(equity_curve, dtype=float)
+    if arr.size < 2:
+        return np.empty(0, dtype=float)
+    prev = arr[:-1]
+    cur = arr[1:]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        rets = np.where(prev > 0, (cur - prev) / prev, np.nan)
+    return rets[np.isfinite(rets)]
+
+
+def sortino_ratio(
+    equity_curve: Sequence[float], target: float = 0.0, periods: int = 252
+) -> float:
+    """Annualized Sortino ratio (excess return over downside deviation).
+
+    Downside deviation is the RMS of *below-target* daily returns, averaged over
+    the count of below-target days **only** — the conservative convention.  It
+    deliberately does not dilute the denominator with flat/up days, so a strategy
+    with sparse losses (like this no-stop-loss, realize-only-gains one) is not
+    flattered by a large number of near-zero days.
+    """
+    rets = daily_returns(equity_curve)
+    if rets.size < 2:
+        return 0.0
+    downside = rets[rets < target] - target
+    if downside.size == 0:
+        return 0.0
+    dd = math.sqrt(float(np.mean(downside ** 2)))
+    if dd == 0.0:
+        return 0.0
+    return (float(np.mean(rets)) - target) / dd * math.sqrt(periods)
+
+
+def max_drawdown_pct(equity_curve: Sequence[float]) -> float:
+    """Worst peak-to-trough drop as a positive fraction (0.12 == 12%)."""
+    arr = np.asarray(equity_curve, dtype=float)
+    if arr.size == 0:
+        return 0.0
+    peak = np.maximum.accumulate(arr)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        dd = np.where(peak > 0, (peak - arr) / peak, 0.0)
+    return float(np.max(dd)) if dd.size else 0.0
+
+
+def calmar_ratio(annual_ret: float, max_dd_fraction: float) -> float:
+    """CAGR divided by max draw-down fraction (0 when there is no draw-down)."""
+    if max_dd_fraction <= 0.0:
+        return 0.0
+    return annual_ret / max_dd_fraction
+
+
+def ulcer_index(equity_curve: Sequence[float]) -> float:
+    """Ulcer Index: RMS of the percentage draw-down series (in percent units)."""
+    arr = np.asarray(equity_curve, dtype=float)
+    if arr.size == 0:
+        return 0.0
+    peak = np.maximum.accumulate(arr)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        dd_pct = np.where(peak > 0, (arr - peak) / peak * 100.0, 0.0)
+    return float(math.sqrt(float(np.mean(dd_pct ** 2))))
+
+
+def value_at_risk(equity_curve: Sequence[float], confidence: float = 0.95) -> float:
+    """Historical 1-day VaR as a non-negative loss fraction.
+
+    Returns the magnitude of the ``(1 - confidence)`` quantile of daily returns
+    (e.g. confidence 0.95 -> 5th percentile), clamped at 0: a positive value is a
+    loss of that fraction; 0 means even the tail day was not a loss.
+    """
+    rets = daily_returns(equity_curve)
+    if rets.size < 2:
+        return 0.0
+    q = float(np.quantile(rets, 1.0 - confidence))
+    return max(-q, 0.0)
+
+
+def conditional_var(equity_curve: Sequence[float], confidence: float = 0.95) -> float:
+    """Historical CVaR / expected shortfall as a non-negative loss fraction.
+
+    The mean of all daily returns at or below the VaR threshold (the average of
+    the worst ``1 - confidence`` tail), reported as a non-negative loss fraction
+    (clamped at 0 when the tail is not a loss).
+    """
+    rets = daily_returns(equity_curve)
+    if rets.size < 2:
+        return 0.0
+    q = np.quantile(rets, 1.0 - confidence)
+    tail = rets[rets <= q]
+    if tail.size == 0:
+        return max(float(-q), 0.0)
+    return max(float(-tail.mean()), 0.0)
+
+
+def return_skew(equity_curve: Sequence[float]) -> float:
+    """Sample skewness of daily returns (0 for fewer than 3 returns)."""
+    rets = daily_returns(equity_curve)
+    if rets.size < 3:
+        return 0.0
+    return float(stats.skew(rets, bias=False))
+
+
+def return_kurtosis(equity_curve: Sequence[float]) -> float:
+    """Sample excess kurtosis (Fisher) of daily returns (0 for fewer than 4)."""
+    rets = daily_returns(equity_curve)
+    if rets.size < 4:
+        return 0.0
+    return float(stats.kurtosis(rets, fisher=True, bias=False))
+
+
+def drawdown_percentiles(
+    equity_curve: Sequence[float], percentiles: Sequence[int] = (50, 90, 95, 99)
+) -> Dict[int, float]:
+    """Percentiles of the daily draw-down depth (positive fractions)."""
+    arr = np.asarray(equity_curve, dtype=float)
+    if arr.size == 0:
+        return {int(p): 0.0 for p in percentiles}
+    peak = np.maximum.accumulate(arr)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        dd = np.where(peak > 0, (peak - arr) / peak, 0.0)
+    return {int(p): float(np.percentile(dd, p)) for p in percentiles}
+
+
+def worst_day_equity(equity_curve: Sequence[float]) -> float:
+    """Lowest equity ever reached (the literal worst day on the books)."""
+    arr = np.asarray(equity_curve, dtype=float)
+    return float(np.min(arr)) if arr.size else 0.0
+
+
+def worst_daily_return(equity_curve: Sequence[float]) -> float:
+    """Most negative single-day equity return (<= 0; 0 if never negative)."""
+    rets = daily_returns(equity_curve)
+    if rets.size == 0:
+        return 0.0
+    return float(np.min(rets))
+
+
+def build_risk_metrics(equity_curve: Sequence[float], n_trading_days: int) -> Dict[str, float]:
+    """Assemble the tail-risk / draw-down block used by the report and JSON."""
+    ann = annualized_return(equity_curve, n_trading_days)
+    mdd_pct = max_drawdown_pct(equity_curve)
+    ddp = drawdown_percentiles(equity_curve)
+    return {
+        "sortino_ratio": sortino_ratio(equity_curve),
+        "calmar_ratio": calmar_ratio(ann, mdd_pct),
+        "ulcer_index": ulcer_index(equity_curve),
+        "var_95_daily": value_at_risk(equity_curve, 0.95),
+        "cvar_95_daily": conditional_var(equity_curve, 0.95),
+        "return_skew": return_skew(equity_curve),
+        "return_kurtosis_excess": return_kurtosis(equity_curve),
+        "max_drawdown_pct": mdd_pct,
+        "drawdown_pct_p50": ddp[50],
+        "drawdown_pct_p90": ddp[90],
+        "drawdown_pct_p95": ddp[95],
+        "drawdown_pct_p99": ddp[99],
+        "worst_day_equity": worst_day_equity(equity_curve),
+        "worst_daily_return": worst_daily_return(equity_curve),
+    }
 
 
 class SimResultLike:  # pragma: no cover - typing aid only
@@ -148,6 +337,11 @@ def build_summary(result, cfg: Config) -> Dict[str, object]:
     ending_unrealized = pf.unrealized_pnl()
 
     avg_exposure = (pf.exposure_sum / pf.exposure_obs) if pf.exposure_obs else 0.0
+
+    # Tail-risk / draw-down block (Week 1).  margin_call_rate joins it because it
+    # is a survival metric, not a return metric.
+    risk = build_risk_metrics(result.equity_curve, n_days)
+    risk["margin_call_rate"] = (pf.margin_call_count / n_days) if n_days else 0.0
 
     profit_factor = (
         pf.closed_lot_gross_profit / pf.closed_lot_gross_loss
@@ -194,6 +388,12 @@ def build_summary(result, cfg: Config) -> Dict[str, object]:
         "annualized_return": annualized_return(result.equity_curve, n_days),
         "sharpe_like_ratio": sharpe_like(result.equity_curve),
         "profit_factor": profit_factor,
+        # --- tail-risk / draw-down block (Week 1) ---
+        "risk": risk,
+        # --- data-quality audit trail (repaired vendor price glitches) ---
+        "data_quality": {
+            "price_glitch_repairs": getattr(result, "data_repairs", []) or [],
+        },
         # --- run configuration echoed for reproducibility / audit ---
         "force_liquidation": cfg.force_liquidation,
         "maintenance_margin_ratio": cfg.maintenance_margin_ratio,
