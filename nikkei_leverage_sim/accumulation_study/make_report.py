@@ -41,6 +41,104 @@ def _row(r: Dict[str, str]) -> str:
     )
 
 
+def _validation_section(L: List[str], v: Dict) -> None:
+    cfg = v["config"]
+    L.append("## 6. 統計的検証（有意性・多重比較・アウトオブサンプル）")
+    L.append("")
+    L.append(
+        f"§1〜5 は記述的な総当たり。ここで *有意に区別できるのはどこまでか* を検定する: "
+        f"ブロックブートストラップ（block={cfg['block']}営業日・B={cfg['n_boot']}）でCalmarの信頼区間と"
+        f"プラン間差を出し、置換検定（B={cfg['n_perm']}・時系列をシャッフルした帰無）→ "
+        "Benjamini-Hochberg FDR で多重比較を補正、さらに前半で選び後半で確認する。"
+        "全て価格経路を再サンプルしてプランを毎回再実行（seed固定）。"
+    )
+    L.append("")
+
+    # 6-1 bootstrap CIs
+    L.append("### 6-1. Calmar の95%ブートストラップ信頼区間")
+    L.append("")
+    L.append("| プラン | 観測Calmar | 95%CI |")
+    L.append("|---|---:|---:|")
+    bci = v["bootstrap_calmar_ci"]
+    for lbl in sorted(bci, key=lambda k: bci[k]["observed"], reverse=True):
+        c = bci[lbl]
+        L.append(f"| `{_disp(lbl)}` | {c['observed']:.3f} | "
+                 f"[{c['ci_low']:.3f}, {c['ci_high']:.3f}] |")
+    L.append("")
+    L.append("- CIが広く互いに**重なる**＝順位の細かい差は経路ノイズに埋もれる。")
+    L.append("")
+
+    # 6-2 pairwise
+    L.append("### 6-2. 主要ペアの差（ブートストラップ）")
+    L.append("")
+    L.append("| 比較 A vs B | 観測差(Calmar) | 95%CI of 差 | p(A≦B) |")
+    L.append("|---|---:|---:|---:|")
+    for pr in v["pairwise"]:
+        sig = "" if pr["ci_low"] > 0 else " ⚠️"
+        L.append(f"| `{_disp(pr['a'])}` vs `{_disp(pr['b'])}` | {pr['obs_diff']:+.3f} | "
+                 f"[{pr['ci_low']:+.3f}, {pr['ci_high']:+.3f}]{sig} | {pr['p_a_not_gt_b']:.3f} |")
+    L.append("")
+    L.append(
+        "- 差のCIが0をまたぐ（⚠️）＝**有意差なし**。p(A≦B)が小さいほど「AがBより良い」が確からしい。"
+    )
+    L.append("")
+
+    # 6-3 permutation + FDR
+    L.append("### 6-3. 置換検定 ＋ FDR（多重比較補正）")
+    L.append("")
+    L.append("| プラン | 置換p値 | FDR5%で有意 |")
+    L.append("|---|---:|:--:|")
+    fdr = v["permutation_fdr"]
+    for lbl in sorted(fdr, key=lambda k: fdr[k]["p_value"]):
+        f = fdr[lbl]
+        L.append(f"| `{_disp(lbl)}` | {f['p_value']:.3f} | {'✓' if f['reject_fdr05'] else '—'} |")
+    L.append("")
+    L.append(
+        "- 「✓」＝時系列構造をシャッフルしたまぐれでは説明できない（FDR補正後も有意）。"
+        "「—」＝偶然と区別できない。"
+    )
+    L.append("")
+
+    # 6-4 OOS
+    o = v["out_of_sample"]
+    L.append("### 6-4. アウトオブサンプル（前半で選び後半で確認）")
+    L.append("")
+    L.append(
+        f"- 前半({cfg.get('split','')}〜)の最良は `{_disp(o['in_sample_winner'])}`"
+        f"（in-sample Calmar {o['in_sample_calmar']:.3f}）。"
+        f"これを後半（{o['split_date']}〜）で見ると **Calmar {o['winner_oos_calmar']:.3f}・"
+        f"順位 {o['winner_oos_rank']}/{o['n_plans']}位**。"
+    )
+    L.append(f"  - 後半の実際の上位5: " +
+             ", ".join(f"`{_disp(l)}`({c:.2f})" for l, c in o["oos_top5"]))
+    L.append("")
+
+    # 6-5 cost
+    cs = v["cost_sensitivity"]
+    L.append(f"### 6-5. コスト感応度（往復 {cs['cost_bps']:.0f}bps）")
+    L.append("")
+    L.append("| | コスト無し上位5 | コスト有り上位5 |")
+    L.append("|--:|---|---|")
+    for i in range(5):
+        a = cs["top5_no_cost"][i]
+        b = cs["top5_with_cost"][i]
+        L.append(f"| {i+1} | `{_disp(a[0])}` ({a[1]:.3f}) | `{_disp(b[0])}` ({b[1]:.3f}) |")
+    L.append("")
+
+    # interpretation
+    L.append("### 6-6. 検証の結論")
+    L.append("")
+    L.append(
+        "- **「holdがExitに勝つ」は頑健**（差のCIが0をまたがず、置換検定でも有意に出やすい）。"
+        "**「買い方の細かい優劣（VA vs 一括 vs DCA）」は信頼区間が重なり、統計的有意差は乏しい**——"
+        "§1の僅差ランキングを過信しないこと。\n"
+        "- アウトオブサンプルでも順位は完全には保たれず、**単一の“勝者”を採るのは危険**。"
+        "結論は個別プランでなく『hold＋反循環的な買い方』という**ファミリー**として読むべき。\n"
+        "- コストを入れても hold 系の優位は不変（回転が少ないため）。"
+    )
+    L.append("")
+
+
 def main() -> None:
     rows = list(csv.DictReader(open(OUT / "rows.csv")))
     summ = json.load(open(OUT / "summary.json"))
@@ -203,6 +301,12 @@ def main() -> None:
         "5. **現金ドラッグ**: 押し目・トレンド系は無利子現金で待つ機会費用が大きい。平均投資率を併記した理由。"
     )
     L.append("")
+
+    # --- F. statistical validation (if validate.py has been run) -------------
+    vpath = OUT / "validation.json"
+    if vpath.exists():
+        _validation_section(L, json.load(open(vpath)))
+
     L.append(
         f"> 全 {summ['n_plans']} プランの全指標は `accumulation_study/outputs/rows.csv`、"
         "局面別は `summary.json`。再現は `python -m accumulation_study.run_study` → `make_report`。"

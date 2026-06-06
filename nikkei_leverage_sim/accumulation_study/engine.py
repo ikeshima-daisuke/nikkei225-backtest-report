@@ -96,6 +96,7 @@ def simulate(
     buy_day_indices: Optional[Sequence[int]] = None,
     repeated: bool = False,
     signals: Optional[object] = None,
+    cost_bps: float = 0.0,
 ) -> SimResult:
     """Run one accumulate-then-exit plan over ``closes``.
 
@@ -125,6 +126,7 @@ def simulate(
     n_buys = 0
     invested_frac_sum = 0.0
     exited = False
+    cost_rate = max(0.0, float(cost_bps) / 10_000.0)
 
     # Precompute, per index, how many scheduled buy days remain in the window
     # (used by pacing policies); recomputed against phase_start lazily below.
@@ -152,7 +154,7 @@ def simulate(
             buy = accumulation(ctx)
             buy = float(max(0.0, min(buy, cash)))
             if buy > 0:
-                shares += buy / price
+                shares += (buy * (1.0 - cost_rate)) / price  # fee eats into shares
                 cash -= buy
                 cost_basis += buy
                 deployed += buy
@@ -172,7 +174,7 @@ def simulate(
         if shares > 0 and frac and frac > 0:
             frac = min(1.0, float(frac))
             sell_sh = shares * frac
-            cash += sell_sh * price
+            cash += sell_sh * price * (1.0 - cost_rate)  # fee off the proceeds
             cost_basis -= avg_cost * sell_sh
             shares -= sell_sh
             n_sells += 1

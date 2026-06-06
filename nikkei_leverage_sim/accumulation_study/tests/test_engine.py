@@ -66,6 +66,17 @@ def test_month_start_indices_picks_first_session_per_month():
     assert month_start_indices(dates) == [0, 2, 4]
 
 
+def test_cost_bps_reduces_final_equity():
+    prices = [100.0, 100.0, 100.0, 200.0, 50.0]
+    free = simulate(prices, 1_000_000.0, LumpSum(), TakeProfit(0.5))
+    paid = simulate(prices, 1_000_000.0, LumpSum(), TakeProfit(0.5), cost_bps=50.0)
+    # A round trip (buy + sell) pays two fees, so the banked cash is smaller.
+    assert paid.equity[-1] < free.equity[-1]
+    # Zero cost is a no-op versus the default.
+    same = simulate(prices, 1_000_000.0, LumpSum(), TakeProfit(0.5), cost_bps=0.0)
+    assert same.equity[-1] == free.equity[-1]
+
+
 def test_evaluate_reports_calmar_and_invested_fraction():
     res = simulate([100.0, 120.0, 90.0, 150.0], 1_000_000.0, LumpSum(), HoldToEnd())
     m = evaluate(res, 1_000_000.0, 4)
