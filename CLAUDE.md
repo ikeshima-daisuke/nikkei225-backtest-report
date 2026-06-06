@@ -45,13 +45,24 @@ python backtest.py --out-dir DIR   # 出力先を変更
 ### レイアウト
 ```
 nikkei_leverage_sim/
-├── src/nikkei_leverage_sim/   # backtest, portfolio, strategy, optimizer, metrics, indicators, data, cli, reporting, config
+├── src/nikkei_leverage_sim/   # backtest, portfolio, strategy, optimizer, metrics, indicators, data, cli, reporting, config, benchmark, validation
 ├── tests/                     # pytest（外部通信なし・人工データのみ）
+├── variants/                  # 戦略バリアント・グリッドサーチ（コア無改変の独立実装）
+├── accumulation_study/        # 積立×Exit 比較スタディ＋統計的検証（コア無改変の独立実装）
 ├── examples/                  # sample_config.yaml / config_fast.yaml
 ├── outputs/  outputs_real_fast/  # 生成物（CSV/PNG/JSON）
 ├── pyproject.toml             # setuptools, src レイアウト, console script: nikkei-leverage-sim
-├── README.md  REPORT_REAL.md
+├── README.md  REPORT_REAL.md  REPORT_VARIANTS.md  REPORT_ACCUMULATION.md ...
 ```
+
+### サブパッケージ（コア無改変・独立）
+- **`variants/`** — 既存 fast 戦略に初期一括・一括売却ルールを載せた 432 通りグリッド。`REPORT_VARIANTS.md`。
+- **`accumulation_study/`** — 「使える資本 ¥10M で、どう積立→いつ売る」を総当たり比較（Calmar ランキング）し、
+  **統計的に検証**（ブロックブートストラップ CI・置換検定・BH-FDR・アウトオブサンプル・コスト感応度）するスタディ。
+  `REPORT_ACCUMULATION.md`。重要な学び: **グリッド最良は統計的有意でなく OOS で再現しない**（過剰最適化の実例）。
+  実行: `python -m accumulation_study.run_study` → `make_report`（検証は `validate`）。テストは `pytest accumulation_study/tests`。
+- パッシブ比較は `src/.../benchmark.py`（一括 B&H＋**定額積立 DCA**：1570.T/N225/現金）。`REPORT_REAL.md §10` は
+  **使える資本 ¥10M を分母**にした公平比較（¥100M 分母は本戦略の DD を過小評価するため）。
 
 ### 実行（必ず `nikkei_leverage_sim/` 内で）
 ```bash
@@ -60,8 +71,11 @@ pip install -e ".[dev,fetch]"   # fetch は yfinance（任意）
 
 python -m nikkei_leverage_sim.cli synth --out data/ --days 900 --seed 7        # オフライン人工データ生成
 python -m nikkei_leverage_sim.cli run   --config examples/sample_config.yaml --synthetic
-pytest -q                        # 33 tests, 外部通信なし
+pytest -q                              # コア（外部通信なし・人工データ）
+pytest variants/tests accumulation_study/tests -q   # 独立サブパッケージのテスト（別途実行）
 ```
+※ コアの `pytest -q` は `testpaths=["tests"]` のため**サブパッケージのテストは拾わない**。
+`variants/` と `accumulation_study/` は各自のローカル `conftest.py` で `src`/PKG を sys.path に追加して別途実行する。
 
 ### 設計上の不変条件（変更時は厳守）
 - **損切りなし**: `Portfolio.sell_lot()` は含み損（`net_pnl_before_tax < 0`）の売却を拒否する。

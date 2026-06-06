@@ -9,6 +9,10 @@
 > 📊 **実データ結果**は [`REPORT_REAL.md`](REPORT_REAL.md)（fast/フル/Codex の3版比較）。
 > 🧪 **戦略バリアント**（初期一括・一括売却[固定円/固定%]・combo の432通りグリッドサーチ）は
 > [`REPORT_VARIANTS.md`](REPORT_VARIANTS.md) と [`variants/`](variants/README.md)。コア無改変の独立実装です。
+> 📈 **積立×Exit 比較スタディ**（一括/定額DCA/押し目買い/バリューアベレージング/トレンド・ボラ調整 ×
+> hold/利確/トレーリング/MA割れ/期日glide/ボラ退避、Calmar ランキング＋**統計的検証**）は
+> [`REPORT_ACCUMULATION.md`](REPORT_ACCUMULATION.md) と [`accumulation_study/`](accumulation_study/README.md)。
+> 結論: プラン間の優劣は統計的に有意でなく、最良プランはアウトオブサンプルで再現しない（§6）。コア無改変の独立実装です。
 
 ---
 
