@@ -52,6 +52,7 @@ def render_report_md(
     period_start: str = "",
     period_end: str = "",
     n_sessions: int = 0,
+    dca_cap: Optional[float] = None,
 ) -> str:
     """Return the full Markdown report as a string."""
     risk: Dict[str, Any] = summary.get("risk", {}) or {}
@@ -169,11 +170,24 @@ def render_report_md(
     # --- §4 Benchmark comparison -------------------------------------------
     lines.append("## 4. パッシブ・ベンチマーク比較")
     lines.append("")
+    _dca_scope = (
+        f"市場投下を建玉上限{_yen(dca_cap)}で打ち止め、残りは現金"
+        if dca_cap is not None
+        else "自己資金の全額を均等投下"
+    )
     lines.append(
-        "同一の自己資金を「一括で買って持つ」だけの基準と比較（**終値ベース**。"
-        "本戦略の翌寄付約定とは執行前提が異なる）。"
-        "**本戦略は建玉を自己資金より大幅に絞り（DCA）つつレバを使う**ため、"
-        "一括 Buy&Hold は資金投入がより積極的な参照点（リスクの等価物ではない）。"
+        "同一の自己資金を「ただ買って持つ」だけの基準と比較（**終値ベース**。"
+        "本戦略の翌寄付約定とは執行前提が異なる）。各資産で2通りを併記する: "
+        "**一括 Buy&Hold**（初日に全額投入）と "
+        f"**定額積立(DCA)**（{_dca_scope}・毎営業日に均等買付）。DCA はレバ・利確なし。"
+    )
+    lines.append("")
+    lines.append(
+        "> ⚠️ **分母に注意**: 下表はすべて**自己資金（¥100M）を分母**にしたエクイティ基準。"
+        "本戦略は実際には ≤¥10M しか市場に晒さない（残り ¥90M は遊休担保）ため、この分母では"
+        "**リターンもドローダウンも実態より小さく見える**。"
+        "**実際に使う資本（建玉上限 ¥10M）を分母にした公平な比較は `REPORT_REAL.md §10` を参照**"
+        "（そこでは本戦略の最大DDは数% ではなく ~46% になる）。"
     )
     lines.append("")
     lines.append("| 戦略 | 期末資産 | 総リターン | CAGR | 最大DD% | Sharpe | Sortino | Ulcer | CVaR95 |")

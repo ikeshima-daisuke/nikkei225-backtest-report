@@ -1,0 +1,267 @@
+{
+  "config": {
+    "n_boot": 1000,
+    "block": 21,
+    "n_perm": 1000,
+    "seed": 42,
+    "cost_bps": 20.0,
+    "panel_size": 12
+  },
+  "bootstrap_calmar_ci": {
+    "va48_0|hold|monthly|1shot": {
+      "observed": 0.47069896037530945,
+      "ci_low": -0.004896621910165065,
+      "ci_high": 1.0241838947173478,
+      "median": 0.35384840360755215
+    },
+    "va96_6|hold|monthly|1shot": {
+      "observed": 0.45711495442331024,
+      "ci_low": -0.005076645898720314,
+      "ci_high": 0.969322635949863,
+      "median": 0.3334488034302431
+    },
+    "dipA|hold|monthly|1shot": {
+      "observed": 0.44122501023096655,
+      "ci_low": -0.01023932385443165,
+      "ci_high": 1.1239571842013472,
+      "median": 0.38072925023717297
+    },
+    "dipB|hold|monthly|1shot": {
+      "observed": 0.43236353901629726,
+      "ci_low": -0.017352131721739744,
+      "ci_high": 1.0968228219677492,
+      "median": 0.3723790187818893
+    },
+    "lump|hold|monthly|1shot": {
+      "observed": 0.42787347367631584,
+      "ci_low": -6.804294759738983e-05,
+      "ci_high": 1.1829795495549835,
+      "median": 0.3929627811989519
+    },
+    "dca96|hold|monthly|1shot": {
+      "observed": 0.4147067336312751,
+      "ci_low": -0.013080295291730125,
+      "ci_high": 0.9606132359555619,
+      "median": 0.32179226116142495
+    },
+    "dca24|hold|monthly|1shot": {
+      "observed": 0.40952516042552983,
+      "ci_low": -0.008326007599682413,
+      "ci_high": 1.116116999418546,
+      "median": 0.37390083468468377
+    },
+    "dca48|hold|monthly|1shot": {
+      "observed": 0.40283950305761423,
+      "ci_low": -0.008016469627002617,
+      "ci_high": 1.066188193412448,
+      "median": 0.3532376155767373
+    },
+    "scaled_rsi|hold|monthly|1shot": {
+      "observed": 0.37854710808483966,
+      "ci_low": -0.004407153700504111,
+      "ci_high": 0.9190250206192007,
+      "median": 0.30645587735947033
+    },
+    "trend100|hold|monthly|1shot": {
+      "observed": 0.3724815581019207,
+      "ci_low": -0.009561114005788391,
+      "ci_high": 0.9117026586160337,
+      "median": 0.2992741467383331
+    },
+    "mom252|momexit|monthly|rot": {
+      "observed": 0.2418183298349657,
+      "ci_low": -0.09187571952072307,
+      "ci_high": 0.9779541058881791,
+      "median": 0.24828667124082365
+    },
+    "dipA|tp100|monthly|1shot": {
+      "observed": 0.29414281693065397,
+      "ci_low": 0.01771745477011825,
+      "ci_high": 0.5721492303057044,
+      "median": 0.17929277275168862
+    }
+  },
+  "pairwise": [
+    {
+      "a": "va48_0|hold|monthly|1shot",
+      "b": "lump|hold|monthly|1shot",
+      "obs_diff": 0.04282548669899361,
+      "ci_low": -0.2765933504325084,
+      "ci_high": 0.2114620173012349,
+      "p_a_not_gt_b": 0.675
+    },
+    {
+      "a": "va48_0|hold|monthly|1shot",
+      "b": "dca48|hold|monthly|1shot",
+      "obs_diff": 0.06785945731769522,
+      "ci_low": -0.10443716684546156,
+      "ci_high": 0.0966853165311015,
+      "p_a_not_gt_b": 0.465
+    },
+    {
+      "a": "va48_0|hold|monthly|1shot",
+      "b": "dipA|tp100|monthly|1shot",
+      "obs_diff": 0.17655614344465548,
+      "ci_low": -0.2955826107991933,
+      "ci_high": 0.7978334127298402,
+      "p_a_not_gt_b": 0.245
+    },
+    {
+      "a": "lump|hold|monthly|1shot",
+      "b": "dipA|tp100|monthly|1shot",
+      "obs_diff": 0.13373065674566187,
+      "ci_low": -0.24673601145044594,
+      "ci_high": 0.8947079046164073,
+      "p_a_not_gt_b": 0.21
+    }
+  ],
+  "permutation_fdr": {
+    "dca24|hold|monthly|1shot": {
+      "p_value": 0.26573426573426573,
+      "reject_fdr05": false
+    },
+    "dca48|hold|monthly|1shot": {
+      "p_value": 0.27472527472527475,
+      "reject_fdr05": false
+    },
+    "dca96|hold|monthly|1shot": {
+      "p_value": 0.21878121878121878,
+      "reject_fdr05": false
+    },
+    "dipA|hold|monthly|1shot": {
+      "p_value": 0.17482517482517482,
+      "reject_fdr05": false
+    },
+    "dipA|tp100|monthly|1shot": {
+      "p_value": 0.23976023976023977,
+      "reject_fdr05": false
+    },
+    "dipB|hold|monthly|1shot": {
+      "p_value": 0.22077922077922077,
+      "reject_fdr05": false
+    },
+    "lump|hold|monthly|1shot": {
+      "p_value": 0.1938061938061938,
+      "reject_fdr05": false
+    },
+    "mom252|momexit|monthly|rot": {
+      "p_value": 0.5004995004995005,
+      "reject_fdr05": false
+    },
+    "scaled_rsi|hold|monthly|1shot": {
+      "p_value": 0.25274725274725274,
+      "reject_fdr05": false
+    },
+    "trend100|hold|monthly|1shot": {
+      "p_value": 0.2007992007992008,
+      "reject_fdr05": false
+    },
+    "va48_0|hold|monthly|1shot": {
+      "p_value": 0.16583416583416583,
+      "reject_fdr05": false
+    },
+    "va96_6|hold|monthly|1shot": {
+      "p_value": 0.16583416583416583,
+      "reject_fdr05": false
+    }
+  },
+  "out_of_sample": {
+    "split_date": "2020-03-18",
+    "in_sample_winner": "dipA|tp100|monthly|1shot",
+    "in_sample_calmar": 0.601111870398108,
+    "winner_oos_calmar": 0.8080924691315434,
+    "winner_oos_rank": 31,
+    "n_plans": 205,
+    "oos_top5": [
+      [
+        "trend200|tp50|monthly|1shot",
+        1.3227994468587971
+      ],
+      [
+        "trend200|tp50|monthly|rot",
+        1.3227994468587971
+      ],
+      [
+        "trend100|tp50|monthly|1shot",
+        1.3227994468587971
+      ],
+      [
+        "trend100|tp50|monthly|rot",
+        1.3227994468587971
+      ],
+      [
+        "dca96|tp50|monthly|1shot",
+        1.3204962904403135
+      ]
+    ],
+    "in_top5": [
+      [
+        "dipA|tp100|monthly|1shot",
+        0.601111870398108
+      ],
+      [
+        "dipA|tp100|monthly|rot",
+        0.601111870398108
+      ],
+      [
+        "trend200|tp50|monthly|1shot",
+        0.5455559524282376
+      ],
+      [
+        "trend200|tp50|monthly|rot",
+        0.5455559524282376
+      ],
+      [
+        "trend100|tp50|monthly|1shot",
+        0.5455559524282376
+      ]
+    ]
+  },
+  "cost_sensitivity": {
+    "cost_bps": 20.0,
+    "top5_no_cost": [
+      [
+        "va48_0|hold|monthly|1shot",
+        0.47069896037530945
+      ],
+      [
+        "va96_6|hold|monthly|1shot",
+        0.45711495442331024
+      ],
+      [
+        "dipA|hold|monthly|1shot",
+        0.44122501023096655
+      ],
+      [
+        "dipB|hold|monthly|1shot",
+        0.43236353901629726
+      ],
+      [
+        "lump|hold|monthly|1shot",
+        0.42787347367631584
+      ]
+    ],
+    "top5_with_cost": [
+      [
+        "va48_0|hold|monthly|1shot",
+        0.4702426115072552
+      ],
+      [
+        "va96_6|hold|monthly|1shot",
+        0.45667243543582564
+      ],
+      [
+        "dipA|hold|monthly|1shot",
+        0.44085118143299284
+      ],
+      [
+        "dipB|hold|monthly|1shot",
+        0.43199118458564334
+      ],
+      [
+        "lump|hold|monthly|1shot",
+        0.42787347367631584
+      ]
+    ]
+  }
+}
