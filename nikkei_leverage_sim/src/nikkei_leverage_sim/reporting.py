@@ -100,7 +100,6 @@ def write_outputs(result: BacktestResult, out_dir: str | Path) -> Dict[str, Any]
         daily["benchmark_close"].tolist() if not daily.empty else [],
         result.config.initial_equity,
         n_days,
-        dca_cap=result.config.max_gross_exposure,
     )
     period_start = period_end = ""
     if not daily.empty:
@@ -113,7 +112,6 @@ def write_outputs(result: BacktestResult, out_dir: str | Path) -> Dict[str, Any]
         period_start=period_start,
         period_end=period_end,
         n_sessions=n_days,
-        dca_cap=result.config.max_gross_exposure,
     )
     (out / "report.md").write_text(report_md, encoding="utf-8")
     (out / "benchmarks.json").write_text(

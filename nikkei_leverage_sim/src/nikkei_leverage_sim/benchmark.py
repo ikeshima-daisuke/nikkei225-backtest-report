@@ -109,13 +109,14 @@ def dca_curve(
     zero-interest cash.  Reported equity is the value of the shares accumulated
     so far (marked at the last finite price) plus that cash.
 
-    ``deploy_cap`` makes this a *same-risk-budget* twin of the active strategy:
-    pass the strategy's gross-exposure cap and the DCA baseline averages the
-    **same maximum capital into the market**, parking the rest in cash on the
-    identical equity base — so the two can be compared head-to-head on one
-    account.  Note the cap bounds *cash deployed*, not the *position value*: in
-    a strong uptrend the accumulated shares can mark far above ``deploy_cap``,
-    so late draw-downs are measured on that larger position.
+    ``deploy_cap`` lets only part of the account be averaged into the market
+    while the rest stays in cash (a cash-allocation DCA).  **Caveat:** parking
+    idle cash on the equity base *dilutes* the percentage return and draw-down,
+    so a head-to-head against a strategy that risks only ``deploy_cap`` should be
+    measured on the deployed capital (``initial_equity == deploy_cap``), not on a
+    larger account — otherwise both metrics look smaller than they really are.
+    Note too that the cap bounds *cash deployed*, not *position value*: in a
+    strong uptrend the accumulated shares can mark far above ``deploy_cap``.
 
     The curve starts at ``initial_equity`` (nothing committed beyond the first
     installment, the rest still cash) and ends with the deployed capital fully
