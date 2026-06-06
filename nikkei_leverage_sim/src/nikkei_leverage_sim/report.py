@@ -52,6 +52,7 @@ def render_report_md(
     period_start: str = "",
     period_end: str = "",
     n_sessions: int = 0,
+    dca_cap: Optional[float] = None,
 ) -> str:
     """Return the full Markdown report as a string."""
     risk: Dict[str, Any] = summary.get("risk", {}) or {}
@@ -169,15 +170,19 @@ def render_report_md(
     # --- §4 Benchmark comparison -------------------------------------------
     lines.append("## 4. パッシブ・ベンチマーク比較")
     lines.append("")
+    _dca_scope = (
+        f"市場投下を本戦略と同じ建玉上限{_yen(dca_cap)}で打ち止め、残りは現金。**同一口座・同一リスク枠**"
+        if dca_cap is not None
+        else "自己資金の全額を均等投下"
+    )
     lines.append(
         "同一の自己資金を「ただ買って持つ」だけの基準と比較（**終値ベース**。"
         "本戦略の翌寄付約定とは執行前提が異なる）。各資産で2通りを併記する: "
-        "**一括 Buy&Hold**（初日に全額投入）と **定額積立(DCA)**（同じ総額を全営業日に均等投下）。"
-        "本戦略は建玉を自己資金より大幅に絞りつつ積み増す（accumulate）ため、"
-        "**一括 Buy&Hold は資金投入がより積極的な参照点**、"
-        "**定額積立は「淡々と積み立てて持つだけ」の等質な参照点**（レバ・利確なし）。"
-        "いずれもリスクの完全な等価物ではない（本戦略はエクスポージャを絞り利確する）ので、"
-        "上の生存・DD指標と必ずセットで読む。"
+        "**一括 Buy&Hold**（初日に全額投入＝最も積極的な上限の参照点）と "
+        f"**定額積立(DCA)**（{_dca_scope}で淡々と積み立てて持つだけの等質な参照点）。"
+        "DCA はレバ・利確なし。本戦略がエクスポージャを絞り利確するのに対し、"
+        "DCA は同じ枠を市場に晒し続けるので、リターンと**ドローダウンをセット**で読む"
+        "（上限は投下額であり、含み益で評価額・DDは上限を超えうる）。"
     )
     lines.append("")
     lines.append("| 戦略 | 期末資産 | 総リターン | CAGR | 最大DD% | Sharpe | Sortino | Ulcer | CVaR95 |")

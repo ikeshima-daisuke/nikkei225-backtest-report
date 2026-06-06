@@ -73,6 +73,26 @@ def test_dca_empty_and_all_nan():
     assert dca_curve([float("nan"), float("nan")], 5.0) == [5.0, 5.0]
 
 
+def test_dca_deploy_cap_parks_remainder_in_cash():
+    # Cap deployment at 100k of a 1M account: only 100k is fed into the market,
+    # the other 900k sits in cash for the whole window.
+    prices = [100.0, 200.0]  # doubles
+    curve = dca_curve(prices, 1_000_000.0, deploy_cap=100_000.0)
+    assert curve[0] == 1_000_000.0
+    # Installment 50k/session at price 100 -> 1500 shares total; 900k stays cash.
+    # End: 1000 sh from day0 (50k/100) + 250 sh from day1 (50k/200) = 1250 sh.
+    shares = 50_000.0 / 100.0 + 50_000.0 / 200.0
+    assert math.isclose(curve[-1], shares * 200.0 + 900_000.0)
+    # The capped DCA's *total* return is diluted by the idle cash buffer.
+    full = dca_curve(prices, 1_000_000.0)
+    assert curve[-1] < full[-1]
+
+
+def test_dca_cap_above_equity_is_a_noop():
+    prices = [100.0, 150.0, 90.0]
+    assert dca_curve(prices, 1_000.0, deploy_cap=10_000.0) == dca_curve(prices, 1_000.0)
+
+
 def test_build_benchmarks_order_and_metrics():
     target = [1000.0, 1100.0, 900.0, 1200.0, 2000.0]
     benchmark = [10000.0, 10500.0, 10200.0, 11000.0, 15000.0]

@@ -12,14 +12,14 @@
   },
   {
     "name": "1570.T 定額積立(DCA)",
-    "final_equity": 706609782.0923392,
-    "total_return": 6.066097820923392,
-    "annualized_return": 0.1764629523493464,
-    "max_drawdown_pct": 0.4687405382163418,
-    "sharpe_like": 0.7210918745473929,
-    "sortino_ratio": 0.7160430669288221,
-    "ulcer_index": 11.224911108334684,
-    "cvar_95_daily": 0.04120343085184318
+    "final_equity": 160660978.2092382,
+    "total_return": 0.6066097820923819,
+    "annualized_return": 0.040192997089322,
+    "max_drawdown_pct": 0.1240274047857223,
+    "sharpe_like": 0.6525141574156147,
+    "sortino_ratio": 0.670690166729072,
+    "ulcer_index": 2.3504452334558694,
+    "cvar_95_daily": 0.00908946102089347
   },
   {
     "name": "N225 Buy & Hold",
@@ -34,14 +34,14 @@
   },
   {
     "name": "N225 定額積立(DCA)",
-    "final_equity": 281126479.61304736,
-    "total_return": 1.8112647961304735,
-    "annualized_return": 0.0897070895819978,
-    "max_drawdown_pct": 0.24638697215765368,
-    "sharpe_like": 0.6904190688095206,
-    "sortino_ratio": 0.6925382775748418,
-    "ulcer_index": 5.017791912077969,
-    "cvar_95_daily": 0.019958703437800433
+    "final_equity": 118112647.96130887,
+    "total_return": 0.1811264796130887,
+    "annualized_return": 0.013931940373522966,
+    "max_drawdown_pct": 0.0407547773104026,
+    "sharpe_like": 0.6692239720200113,
+    "sortino_ratio": 0.6826248916085286,
+    "ulcer_index": 0.7132403381574252,
+    "cvar_95_daily": 0.0030148959564676257
   },
   {
     "name": "Cash (no position)",

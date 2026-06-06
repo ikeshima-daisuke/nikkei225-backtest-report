@@ -26,7 +26,7 @@ and draw-down, which the report surfaces directly.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Sequence
+from typing import Dict, List, Optional, Sequence
 
 import numpy as np
 
@@ -94,19 +94,32 @@ def buy_and_hold_curve(prices: Sequence[float], initial_equity: float) -> List[f
     return curve.tolist()
 
 
-def dca_curve(prices: Sequence[float], initial_equity: float) -> List[float]:
+def dca_curve(
+    prices: Sequence[float],
+    initial_equity: float,
+    deploy_cap: Optional[float] = None,
+) -> List[float]:
     """Fixed-amount dollar-cost-averaging (定額積立) equity curve.
 
-    The *same* total capital as :func:`buy_and_hold_curve` is deployed, but in
-    equal installments — one per finite-price session — instead of all on the
-    first day.  Each such session invests ``initial_equity / n_finite`` at that
-    session's close; the not-yet-invested remainder waits in zero-interest cash
-    (matching the flat cash baseline).  Reported equity is the value of the
-    shares accumulated so far (marked at the last finite price) plus that cash.
+    Capital is deployed in equal installments — one per finite-price session —
+    instead of all on the first day.  The *total* amount put into the asset is
+    ``initial_equity`` by default, or ``deploy_cap`` when given (clamped to
+    ``initial_equity``): each finite session invests ``deployed_total /
+    n_finite`` at that session's close; everything not (yet) invested waits in
+    zero-interest cash.  Reported equity is the value of the shares accumulated
+    so far (marked at the last finite price) plus that cash.
 
-    The curve therefore starts at ``initial_equity`` (nothing yet committed
-    beyond the first installment, the rest still cash) and ends fully invested.
-    Non-finite prices are skipped for *buying* and forward-filled for
+    ``deploy_cap`` makes this a *same-risk-budget* twin of the active strategy:
+    pass the strategy's gross-exposure cap and the DCA baseline averages the
+    **same maximum capital into the market**, parking the rest in cash on the
+    identical equity base — so the two can be compared head-to-head on one
+    account.  Note the cap bounds *cash deployed*, not the *position value*: in
+    a strong uptrend the accumulated shares can mark far above ``deploy_cap``,
+    so late draw-downs are measured on that larger position.
+
+    The curve starts at ``initial_equity`` (nothing committed beyond the first
+    installment, the rest still cash) and ends with the deployed capital fully
+    invested.  Non-finite prices are skipped for *buying* and forward-filled for
     *valuation*, so a stray gap neither buys at a bogus price nor injects a
     spurious zero — mirroring :func:`buy_and_hold_curve`.
     """
@@ -118,7 +131,10 @@ def dca_curve(prices: Sequence[float], initial_equity: float) -> List[float]:
     n_finite = int(finite.sum())
     if n_finite == 0:
         return [float(initial_equity)] * n
-    installment = float(initial_equity) / n_finite
+    deployed_total = float(initial_equity)
+    if deploy_cap is not None:
+        deployed_total = min(float(deploy_cap), deployed_total)
+    installment = deployed_total / n_finite
     shares = 0.0
     cash = float(initial_equity)
     last = float(arr[int(np.argmax(finite))])
@@ -158,13 +174,19 @@ def build_benchmarks(
     benchmark_close: Sequence[float],
     initial_equity: float,
     n_trading_days: int,
+    dca_cap: Optional[float] = None,
 ) -> List[BenchmarkResult]:
     """Build the standard passive baselines over the backtest window.
 
     Returns, in order: lump-sum buy-and-hold and fixed-amount DCA (定額積立) of
     1570.T, the same pair for N225, and a flat cash line.  Each asset is paired
-    so the report can contrast "commit it all up front" against "average in",
-    both deploying the same total ``initial_equity``.
+    so the report can contrast "commit it all up front" against "average in".
+
+    Lump-sum always deploys the full ``initial_equity``.  ``dca_cap`` caps how
+    much the DCA baselines feed into the market (parking the rest in cash on the
+    same equity base); pass the strategy's gross-exposure cap to make DCA a
+    same-risk-budget twin of the active strategy.  When ``None``, DCA also
+    deploys the full ``initial_equity``.
     """
     n = max(len(target_close), len(benchmark_close), 1)
     cash_curve = [float(initial_equity)] * n
@@ -173,13 +195,17 @@ def build_benchmarks(
             "1570.T Buy & Hold", buy_and_hold_curve(target_close, initial_equity), n_trading_days
         ),
         _result_from_curve(
-            "1570.T 定額積立(DCA)", dca_curve(target_close, initial_equity), n_trading_days
+            "1570.T 定額積立(DCA)",
+            dca_curve(target_close, initial_equity, dca_cap),
+            n_trading_days,
         ),
         _result_from_curve(
             "N225 Buy & Hold", buy_and_hold_curve(benchmark_close, initial_equity), n_trading_days
         ),
         _result_from_curve(
-            "N225 定額積立(DCA)", dca_curve(benchmark_close, initial_equity), n_trading_days
+            "N225 定額積立(DCA)",
+            dca_curve(benchmark_close, initial_equity, dca_cap),
+            n_trading_days,
         ),
         _result_from_curve("Cash (no position)", cash_curve, n_trading_days),
     ]
