@@ -40,9 +40,15 @@ def test_render_report_has_survival_first_and_benchmarks():
     assert "生存・テールリスク" in md
     assert "パッシブ・ベンチマーク比較" in md
     assert md.index("生存・テールリスク") < md.index("リターン要約")
-    # The strategy row and all three baselines are present.
+    # The strategy row and all baselines (lump-sum + DCA + cash) are present.
     assert "本戦略" in md
-    for name in ("1570.T Buy & Hold", "N225 Buy & Hold", "Cash (no position)"):
+    for name in (
+        "1570.T Buy & Hold",
+        "1570.T 定額積立(DCA)",
+        "N225 Buy & Hold",
+        "N225 定額積立(DCA)",
+        "Cash (no position)",
+    ):
         assert name in md
     # Key tail-risk fields are rendered.
     for label in ("CVaR95", "最低維持率", "最悪日資産", "Sortino", "Ulcer"):
@@ -78,11 +84,13 @@ def test_write_outputs_emits_report_and_benchmarks(tmp_path):
     # Data-quality audit block is always present (empty list for clean synthetic).
     assert on_disk["data_quality"]["price_glitch_repairs"] == []
 
-    # benchmarks.json is a list of three baselines.
+    # benchmarks.json is the list of baselines (lump-sum + DCA per asset + cash).
     benches = json.loads((tmp_path / "benchmarks.json").read_text(encoding="utf-8"))
     assert [b["name"] for b in benches] == [
         "1570.T Buy & Hold",
+        "1570.T 定額積立(DCA)",
         "N225 Buy & Hold",
+        "N225 定額積立(DCA)",
         "Cash (no position)",
     ]
 

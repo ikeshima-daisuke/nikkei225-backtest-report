@@ -30,7 +30,7 @@ src レイアウト・pytest・外部通信なし（人工データ＋ローカ�
         │  backtest.py   ── simulate()（1パス）＋ run_backtest()（ウォークフォワード駆動）│
         │  optimizer.py  ── WalkForwardOptimizer.params_at_close（再選択・候補評価）      │
         │  metrics.py    ── objective_score ＋ サマリ指標（risk ブロック）               │
-        │  benchmark.py  ── パッシブ B&H 基準（1570.T / N225 / 現金）                     │
+        │  benchmark.py  ── パッシブ基準（一括B&H + 定額積立DCA: 1570.T/N225 / 現金）     │
         └─────────────┬─────────────────────────────────────────────────────────────┘
                       │ BacktestResult（daily_rows / trades / equity_curve / summary）
         ┌─────────────▼─────────────────────────────────────────────────────────────┐
@@ -114,7 +114,7 @@ initial_equity + realized_after_tax`（実現損益を反映・評価益は保�
 
 **到達済み ≒ L3（現実的な単一銘柄リサーチ・エンジン）**
 - ルックアヘッド禁止の約定/評価エンジン、信用・損切り禁止・追証（強制ロスカット任意）。
-- リスク指標（Sortino/Calmar/Ulcer/VaR/CVaR/最大DD/アンダーウォーター分布）＋パッシブ比較。
+- リスク指標（Sortino/Calmar/Ulcer/VaR/CVaR/最大DD/アンダーウォーター分布）＋パッシブ比較（一括B&H・定額積立DCA）。
 - ストレス（暴落レジーム＋ブートストラップ破綻確率）、統計的検証（置換検定/CV/FDR）、
   執行現実化（VWAP/不利/遅延/部分約定）。
 - データ品質補修＋監査証跡（summary.json `data_quality` / report.md）。

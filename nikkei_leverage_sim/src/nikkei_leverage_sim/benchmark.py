@@ -3,13 +3,25 @@
 The active strategy is leveraged DCA with take-profit; a single number in
 isolation cannot say whether the risk taken was worth it.  These baselines give
 an apples-to-apples *capital* comparison: deploy the **same initial equity** and
-either buy-and-hold the traded ETF (1570.T), buy-and-hold the index (N225), or
-sit in cash.
+either buy-and-hold the traded ETF (1570.T), buy-and-hold the index (N225),
+**dollar-cost-average a fixed amount into either** (定額積立), or sit in cash.
 
-Caveat (surfaced in the report): the strategy caps gross exposure far below the
-initial equity and dollar-cost-averages, so a lump-sum buy-and-hold of the full
-initial equity is a *more aggressive* deployment of capital.  The baselines are
-reference points, not like-for-like risk twins.
+Two flavours of "just buy it" are provided on purpose:
+
+* **Lump-sum buy-and-hold** commits the whole initial equity on day one.  It is
+  the *more aggressive* deployment of capital — the active strategy caps gross
+  exposure far below the initial equity and accumulates gradually, so lump-sum
+  is not a like-for-like risk twin.
+* **定額積立 (fixed-amount DCA)** deploys the *same total capital*, but spread
+  evenly across every session instead of all at once.  This is the like-for-like
+  answer to the lump-sum caveat: like the active strategy it *accumulates* into
+  the position over time rather than committing everything up front, so it
+  isolates "what does the cleverness of the strategy buy you over robotically
+  averaging in and just holding?".
+
+All baselines are reference points, not perfect risk twins (the strategy still
+caps exposure and takes profit); read them alongside the strategy's own exposure
+and draw-down, which the report surfaces directly.
 """
 from __future__ import annotations
 
@@ -82,6 +94,44 @@ def buy_and_hold_curve(prices: Sequence[float], initial_equity: float) -> List[f
     return curve.tolist()
 
 
+def dca_curve(prices: Sequence[float], initial_equity: float) -> List[float]:
+    """Fixed-amount dollar-cost-averaging (定額積立) equity curve.
+
+    The *same* total capital as :func:`buy_and_hold_curve` is deployed, but in
+    equal installments — one per finite-price session — instead of all on the
+    first day.  Each such session invests ``initial_equity / n_finite`` at that
+    session's close; the not-yet-invested remainder waits in zero-interest cash
+    (matching the flat cash baseline).  Reported equity is the value of the
+    shares accumulated so far (marked at the last finite price) plus that cash.
+
+    The curve therefore starts at ``initial_equity`` (nothing yet committed
+    beyond the first installment, the rest still cash) and ends fully invested.
+    Non-finite prices are skipped for *buying* and forward-filled for
+    *valuation*, so a stray gap neither buys at a bogus price nor injects a
+    spurious zero — mirroring :func:`buy_and_hold_curve`.
+    """
+    arr = np.asarray(prices, dtype=float)
+    n = arr.size
+    if n == 0:
+        return [float(initial_equity)]
+    finite = np.isfinite(arr) & (arr > 0)
+    n_finite = int(finite.sum())
+    if n_finite == 0:
+        return [float(initial_equity)] * n
+    installment = float(initial_equity) / n_finite
+    shares = 0.0
+    cash = float(initial_equity)
+    last = float(arr[int(np.argmax(finite))])
+    curve = np.empty(n, dtype=float)
+    for i in range(n):
+        if finite[i]:
+            last = float(arr[i])
+            shares += installment / last
+            cash -= installment
+        curve[i] = shares * last + cash
+    return curve.tolist()
+
+
 def _result_from_curve(
     name: str, equity_curve: Sequence[float], n_trading_days: int
 ) -> BenchmarkResult:
@@ -111,8 +161,10 @@ def build_benchmarks(
 ) -> List[BenchmarkResult]:
     """Build the standard passive baselines over the backtest window.
 
-    Returns buy-and-hold of 1570.T, buy-and-hold of N225, and a flat cash line,
-    in that order.
+    Returns, in order: lump-sum buy-and-hold and fixed-amount DCA (定額積立) of
+    1570.T, the same pair for N225, and a flat cash line.  Each asset is paired
+    so the report can contrast "commit it all up front" against "average in",
+    both deploying the same total ``initial_equity``.
     """
     n = max(len(target_close), len(benchmark_close), 1)
     cash_curve = [float(initial_equity)] * n
@@ -121,7 +173,13 @@ def build_benchmarks(
             "1570.T Buy & Hold", buy_and_hold_curve(target_close, initial_equity), n_trading_days
         ),
         _result_from_curve(
+            "1570.T 定額積立(DCA)", dca_curve(target_close, initial_equity), n_trading_days
+        ),
+        _result_from_curve(
             "N225 Buy & Hold", buy_and_hold_curve(benchmark_close, initial_equity), n_trading_days
+        ),
+        _result_from_curve(
+            "N225 定額積立(DCA)", dca_curve(benchmark_close, initial_equity), n_trading_days
         ),
         _result_from_curve("Cash (no position)", cash_curve, n_trading_days),
     ]
