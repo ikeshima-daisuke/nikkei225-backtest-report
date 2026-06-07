@@ -6,6 +6,12 @@
 
 > ⚠️ これは研究用のバックテストであり、**将来の成績を一切保証しません**。後述の「注意点」を必ず読んでください。
 
+> 🧭 **開発を継続する人へ**: [`DEVELOPMENT.md`](DEVELOPMENT.md) に全スタディの到達点マップ・横断的に確立した結論・
+> 設計規約・次の方向性（ロードマップ）・新スタディの追加手順をまとめています。最初に読んでください。
+> 各種レポート: 耐性=[`REPORT_STRESS.md`](REPORT_STRESS.md)・追証=[`REPORT_MARGIN_CALL.md`](REPORT_MARGIN_CALL.md)・
+> 約定=[`REPORT_EXECUTION.md`](REPORT_EXECUTION.md)・統計検証=[`REPORT_VALIDATION.md`](REPORT_VALIDATION.md)・
+> 公平性監査=[`REPORT_FAIRNESS.md`](REPORT_FAIRNESS.md)。
+
 > 📊 **実データ結果**は [`REPORT_REAL.md`](REPORT_REAL.md)（fast/フル/Codex の3版比較）。
 > 🧪 **戦略バリアント**（初期一括・一括売却[固定円/固定%]・combo の432通りグリッドサーチ）は
 > [`REPORT_VARIANTS.md`](REPORT_VARIANTS.md) と [`variants/`](variants/README.md)。コア無改変の独立実装です。
@@ -13,6 +19,10 @@
 > hold/利確/トレーリング/MA割れ/期日glide/ボラ退避、Calmar ランキング＋**統計的検証**）は
 > [`REPORT_ACCUMULATION.md`](REPORT_ACCUMULATION.md) と [`accumulation_study/`](accumulation_study/README.md)。
 > 結論: プラン間の優劣は統計的に有意でなく、最良プランはアウトオブサンプルで再現しない（§6）。コア無改変の独立実装です。
+> 🌪️ **逆風レジーム頑健性スタディ**（実 `^N225` 1989-2013 の「失われた30年」から合成2倍ETFを再構成し、同じ積立×Exit
+> ＋追証/破綻エンジンを replay）は [`REPORT_REGIME.md`](REPORT_REGIME.md) と [`regime_study/`](regime_study/README.md)。
+> 結論: **「hold 最良」「VA+hold」「¥5M(2倍)生存」は全て追い風(2014-2026)限定で、逆風では反転/崩壊**
+> （buy&hold 2倍は失われた10年で ≈−98%・¥3.3M は債務超過）。合成は実1570.Tで較正・検証済み。コア無改変の独立実装です。
 
 ---
 

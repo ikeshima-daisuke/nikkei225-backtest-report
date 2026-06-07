@@ -19,5 +19,9 @@ outputs_margincall/*/daily.csv
 outputs_margincall/*/trades.csv
 outputs_margincall/*/optimization.csv
 
+# Regime study: keep summary.json / survival.json / per-plan rows.csv / validation
+# / report, drop the regenerable per-row synthetic price series (rebuilt from N225).
+regime_study/outputs/*/daily.csv
+
 # Local virtualenv
 .venv/

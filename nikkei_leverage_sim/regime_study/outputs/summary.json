@@ -1,0 +1,918 @@
+{
+  "calibration": {
+    "base_drag": -0.019576588549726742,
+    "base_drag_pct": -1.958,
+    "calib_rate": 0.000476923076923077,
+    "leverage": 2.0,
+    "calib_start": "2014-01-06",
+    "calib_end": "2026-06-05",
+    "n_days": 3032,
+    "beta": 1.9561,
+    "corr_daily_vs_2x": 0.99275,
+    "tracking_error_ann": 0.0506,
+    "cum_real": 12.9191,
+    "cum_synth": 12.9191
+  },
+  "regimes": [
+    {
+      "key": "bubble_burst",
+      "label": "バブル崩壊 1990-1995（最高金利期）",
+      "kind": "adverse",
+      "start": "1990-01-04",
+      "end": "1995-12-29",
+      "n_days": 1481,
+      "n_months": 72,
+      "n225_total_return": -0.48678189398574057,
+      "top5": [
+        {
+          "label": "dipB|trail15|monthly|1shot",
+          "total_return": 0.021996,
+          "max_drawdown_pct": 0.170084,
+          "calmar": 0.0218,
+          "sortino": 0.0267,
+          "avg_invested_pct": 0.0598,
+          "n_sells": 1
+        },
+        {
+          "label": "dipB|trail15|monthly|rot",
+          "total_return": 0.021996,
+          "max_drawdown_pct": 0.170084,
+          "calmar": 0.0218,
+          "sortino": 0.0267,
+          "avg_invested_pct": 0.0598,
+          "n_sells": 1
+        },
+        {
+          "label": "va96_6|hold|monthly|1shot",
+          "total_return": -0.133729,
+          "max_drawdown_pct": 0.553792,
+          "calmar": -0.0436,
+          "sortino": 0.0654,
+          "avg_invested_pct": 0.5771,
+          "n_sells": 0
+        },
+        {
+          "label": "va96_6|tp50|monthly|1shot",
+          "total_return": -0.133729,
+          "max_drawdown_pct": 0.553792,
+          "calmar": -0.0436,
+          "sortino": 0.0654,
+          "avg_invested_pct": 0.5771,
+          "n_sells": 0
+        },
+        {
+          "label": "va96_6|tp50|monthly|rot",
+          "total_return": -0.133729,
+          "max_drawdown_pct": 0.553792,
+          "calmar": -0.0436,
+          "sortino": 0.0654,
+          "avg_invested_pct": 0.5771,
+          "n_sells": 0
+        }
+      ],
+      "best_hold": {
+        "label": "va96_6|hold|monthly|1shot",
+        "total_return": -0.133729,
+        "max_drawdown_pct": 0.553792,
+        "calmar": -0.0436,
+        "sortino": 0.0654,
+        "avg_invested_pct": 0.5771,
+        "n_sells": 0
+      },
+      "best_exit": {
+        "label": "dipB|trail15|monthly|1shot",
+        "total_return": 0.021996,
+        "max_drawdown_pct": 0.170084,
+        "calmar": 0.0218,
+        "sortino": 0.0267,
+        "avg_invested_pct": 0.0598,
+        "n_sells": 1
+      },
+      "hold_beats_exit": false,
+      "family_best_hold": {
+        "value_avg": {
+          "label": "va96_6|hold|monthly|1shot",
+          "total_return": -0.133729,
+          "max_drawdown_pct": 0.553792,
+          "calmar": -0.0436,
+          "sortino": 0.0654,
+          "avg_invested_pct": 0.5771,
+          "n_sells": 0
+        },
+        "dca": {
+          "label": "dca96|hold|monthly|1shot",
+          "total_return": -0.108895,
+          "max_drawdown_pct": 0.386566,
+          "calmar": -0.0503,
+          "sortino": -0.0624,
+          "avg_invested_pct": 0.3072,
+          "n_sells": 0
+        },
+        "trend": {
+          "label": "trend100|hold|monthly|1shot",
+          "total_return": -0.135785,
+          "max_drawdown_pct": 0.480963,
+          "calmar": -0.051,
+          "sortino": -0.0318,
+          "avg_invested_pct": 0.4031,
+          "n_sells": 0
+        },
+        "scaled": {
+          "label": "scaled_invvol|hold|monthly|1shot",
+          "total_return": -0.114358,
+          "max_drawdown_pct": 0.371796,
+          "calmar": -0.055,
+          "sortino": -0.0957,
+          "avg_invested_pct": 0.2706,
+          "n_sells": 0
+        },
+        "dip": {
+          "label": "dipB|hold|monthly|1shot",
+          "total_return": -0.716933,
+          "max_drawdown_pct": 0.875563,
+          "calmar": -0.2207,
+          "sortino": -0.2169,
+          "avg_invested_pct": 0.9646,
+          "n_sells": 0
+        },
+        "lump": {
+          "label": "lump|hold|monthly|1shot",
+          "total_return": -0.839274,
+          "max_drawdown_pct": 0.912991,
+          "calmar": -0.2928,
+          "sortino": -0.3997,
+          "avg_invested_pct": 1.0,
+          "n_sells": 0
+        }
+      },
+      "lump_hold": {
+        "label": "lump|hold|monthly|1shot",
+        "total_return": -0.839274,
+        "max_drawdown_pct": 0.912991,
+        "calmar": -0.2928,
+        "sortino": -0.3997,
+        "avg_invested_pct": 1.0,
+        "n_sells": 0
+      },
+      "dca_hold": {
+        "label": "dca48|hold|monthly|1shot",
+        "total_return": -0.294216,
+        "max_drawdown_pct": 0.61814,
+        "calmar": -0.0931,
+        "sortino": -0.0453,
+        "avg_invested_pct": 0.6239,
+        "n_sells": 0
+      }
+    },
+    {
+      "key": "lost_decade_1",
+      "label": "失われた10年→2003大底",
+      "kind": "adverse",
+      "start": "1990-01-04",
+      "end": "2003-04-30",
+      "n_days": 3285,
+      "n_months": 160,
+      "n225_total_return": -0.7977050495045809,
+      "top5": [
+        {
+          "label": "dipB|trail15|monthly|1shot",
+          "total_return": 0.021996,
+          "max_drawdown_pct": 0.170084,
+          "calmar": 0.0098,
+          "sortino": 0.012,
+          "avg_invested_pct": 0.027,
+          "n_sells": 1
+        },
+        {
+          "label": "dipB|trail15|monthly|rot",
+          "total_return": 0.021996,
+          "max_drawdown_pct": 0.170084,
+          "calmar": 0.0098,
+          "sortino": 0.012,
+          "avg_invested_pct": 0.027,
+          "n_sells": 1
+        },
+        {
+          "label": "va96_6|maexit200|monthly|1shot",
+          "total_return": -0.01984,
+          "max_drawdown_pct": 0.077234,
+          "calmar": -0.0199,
+          "sortino": -0.0334,
+          "avg_invested_pct": 0.0036,
+          "n_sells": 1
+        },
+        {
+          "label": "va96_6|maexit200|monthly|rot",
+          "total_return": -0.01984,
+          "max_drawdown_pct": 0.077234,
+          "calmar": -0.0199,
+          "sortino": -0.0334,
+          "avg_invested_pct": 0.0036,
+          "n_sells": 1
+        },
+        {
+          "label": "va96_6|maexit200b|monthly|1shot",
+          "total_return": -0.01984,
+          "max_drawdown_pct": 0.077234,
+          "calmar": -0.0199,
+          "sortino": -0.0334,
+          "avg_invested_pct": 0.0036,
+          "n_sells": 1
+        }
+      ],
+      "best_hold": {
+        "label": "scaled_invvol|hold|monthly|1shot",
+        "total_return": -0.54252,
+        "max_drawdown_pct": 0.563631,
+        "calmar": -0.1033,
+        "sortino": -0.4107,
+        "avg_invested_pct": 0.2393,
+        "n_sells": 0
+      },
+      "best_exit": {
+        "label": "dipB|trail15|monthly|1shot",
+        "total_return": 0.021996,
+        "max_drawdown_pct": 0.170084,
+        "calmar": 0.0098,
+        "sortino": 0.012,
+        "avg_invested_pct": 0.027,
+        "n_sells": 1
+      },
+      "hold_beats_exit": false,
+      "family_best_hold": {
+        "scaled": {
+          "label": "scaled_invvol|hold|monthly|1shot",
+          "total_return": -0.54252,
+          "max_drawdown_pct": 0.563631,
+          "calmar": -0.1033,
+          "sortino": -0.4107,
+          "avg_invested_pct": 0.2393,
+          "n_sells": 0
+        },
+        "trend": {
+          "label": "trend200|hold|monthly|1shot",
+          "total_return": -0.772646,
+          "max_drawdown_pct": 0.79123,
+          "calmar": -0.1358,
+          "sortino": -0.4497,
+          "avg_invested_pct": 0.3674,
+          "n_sells": 0
+        },
+        "dca": {
+          "label": "dca96|hold|monthly|1shot",
+          "total_return": -0.895798,
+          "max_drawdown_pct": 0.909885,
+          "calmar": -0.175,
+          "sortino": -0.2919,
+          "avg_invested_pct": 0.6681,
+          "n_sells": 0
+        },
+        "value_avg": {
+          "label": "va96_6|hold|monthly|1shot",
+          "total_return": -0.89993,
+          "max_drawdown_pct": 0.915975,
+          "calmar": -0.1767,
+          "sortino": -0.2296,
+          "avg_invested_pct": 0.8093,
+          "n_sells": 0
+        },
+        "dip": {
+          "label": "dipB|hold|monthly|1shot",
+          "total_return": -0.967301,
+          "max_drawdown_pct": 0.974922,
+          "calmar": -0.2367,
+          "sortino": -0.3069,
+          "avg_invested_pct": 0.984,
+          "n_sells": 0
+        },
+        "lump": {
+          "label": "lump|hold|monthly|1shot",
+          "total_return": -0.981433,
+          "max_drawdown_pct": 0.982465,
+          "calmar": -0.2682,
+          "sortino": -0.3875,
+          "avg_invested_pct": 1.0,
+          "n_sells": 0
+        }
+      },
+      "lump_hold": {
+        "label": "lump|hold|monthly|1shot",
+        "total_return": -0.981433,
+        "max_drawdown_pct": 0.982465,
+        "calmar": -0.2682,
+        "sortino": -0.3875,
+        "avg_invested_pct": 1.0,
+        "n_sells": 0
+      },
+      "dca_hold": {
+        "label": "dca48|hold|monthly|1shot",
+        "total_return": -0.918469,
+        "max_drawdown_pct": 0.923044,
+        "calmar": -0.1895,
+        "sortino": -0.2611,
+        "avg_invested_pct": 0.8304,
+        "n_sells": 0
+      }
+    },
+    {
+      "key": "deflation_grind",
+      "label": "デフレ横ばい 2000-2012",
+      "kind": "adverse",
+      "start": "2000-01-04",
+      "end": "2012-12-28",
+      "n_days": 3192,
+      "n_months": 156,
+      "n225_total_return": -0.4529676043819063,
+      "top5": [
+        {
+          "label": "trend200|tp100|monthly|1shot",
+          "total_return": 0.478975,
+          "max_drawdown_pct": 0.131212,
+          "calmar": 0.2391,
+          "sortino": 0.3708,
+          "avg_invested_pct": 0.0886,
+          "n_sells": 1
+        },
+        {
+          "label": "trend200|tp100|monthly|rot",
+          "total_return": 0.478975,
+          "max_drawdown_pct": 0.131212,
+          "calmar": 0.2391,
+          "sortino": 0.3708,
+          "avg_invested_pct": 0.0886,
+          "n_sells": 1
+        },
+        {
+          "label": "scaled_invvol|tp100|monthly|1shot",
+          "total_return": 0.332552,
+          "max_drawdown_pct": 0.095908,
+          "calmar": 0.239,
+          "sortino": 0.3956,
+          "avg_invested_pct": 0.0617,
+          "n_sells": 1
+        },
+        {
+          "label": "scaled_invvol|tp100|monthly|rot",
+          "total_return": 0.332552,
+          "max_drawdown_pct": 0.095908,
+          "calmar": 0.239,
+          "sortino": 0.3956,
+          "avg_invested_pct": 0.0617,
+          "n_sells": 1
+        },
+        {
+          "label": "trend100|tp100|monthly|1shot",
+          "total_return": 0.478548,
+          "max_drawdown_pct": 0.132986,
+          "calmar": 0.2358,
+          "sortino": 0.3909,
+          "avg_invested_pct": 0.0893,
+          "n_sells": 1
+        }
+      ],
+      "best_hold": {
+        "label": "scaled_invvol|hold|monthly|1shot",
+        "total_return": -0.212075,
+        "max_drawdown_pct": 0.57479,
+        "calmar": -0.0324,
+        "sortino": -0.0402,
+        "avg_invested_pct": 0.2972,
+        "n_sells": 0
+      },
+      "best_exit": {
+        "label": "trend200|tp100|monthly|1shot",
+        "total_return": 0.478975,
+        "max_drawdown_pct": 0.131212,
+        "calmar": 0.2391,
+        "sortino": 0.3708,
+        "avg_invested_pct": 0.0886,
+        "n_sells": 1
+      },
+      "hold_beats_exit": false,
+      "family_best_hold": {
+        "scaled": {
+          "label": "scaled_invvol|hold|monthly|1shot",
+          "total_return": -0.212075,
+          "max_drawdown_pct": 0.57479,
+          "calmar": -0.0324,
+          "sortino": -0.0402,
+          "avg_invested_pct": 0.2972,
+          "n_sells": 0
+        },
+        "trend": {
+          "label": "trend100|hold|monthly|1shot",
+          "total_return": -0.271748,
+          "max_drawdown_pct": 0.723659,
+          "calmar": -0.0342,
+          "sortino": 0.0229,
+          "avg_invested_pct": 0.4691,
+          "n_sells": 0
+        },
+        "value_avg": {
+          "label": "va96_6|hold|monthly|1shot",
+          "total_return": -0.332619,
+          "max_drawdown_pct": 0.874615,
+          "calmar": -0.0359,
+          "sortino": 0.1335,
+          "avg_invested_pct": 0.8028,
+          "n_sells": 0
+        },
+        "dca": {
+          "label": "dca48|hold|monthly|1shot",
+          "total_return": -0.43648,
+          "max_drawdown_pct": 0.881899,
+          "calmar": -0.0502,
+          "sortino": 0.1094,
+          "avg_invested_pct": 0.8226,
+          "n_sells": 0
+        },
+        "dip": {
+          "label": "dipB|hold|monthly|1shot",
+          "total_return": -0.764758,
+          "max_drawdown_pct": 0.881899,
+          "calmar": -0.1224,
+          "sortino": 0.0086,
+          "avg_invested_pct": 0.9581,
+          "n_sells": 0
+        },
+        "lump": {
+          "label": "lump|hold|monthly|1shot",
+          "total_return": -0.826648,
+          "max_drawdown_pct": 0.925983,
+          "calmar": -0.1395,
+          "sortino": -0.0283,
+          "avg_invested_pct": 1.0,
+          "n_sells": 0
+        }
+      },
+      "lump_hold": {
+        "label": "lump|hold|monthly|1shot",
+        "total_return": -0.826648,
+        "max_drawdown_pct": 0.925983,
+        "calmar": -0.1395,
+        "sortino": -0.0283,
+        "avg_invested_pct": 1.0,
+        "n_sells": 0
+      },
+      "dca_hold": {
+        "label": "dca48|hold|monthly|1shot",
+        "total_return": -0.43648,
+        "max_drawdown_pct": 0.881899,
+        "calmar": -0.0502,
+        "sortino": 0.1094,
+        "avg_invested_pct": 0.8226,
+        "n_sells": 0
+      }
+    },
+    {
+      "key": "gfc",
+      "label": "リーマン・ショック 2007-2009",
+      "kind": "adverse",
+      "start": "2007-06-01",
+      "end": "2009-03-31",
+      "n_days": 449,
+      "n_months": 22,
+      "n225_total_return": -0.5484390230851792,
+      "top5": [
+        {
+          "label": "dipB|glide12|monthly|1shot",
+          "total_return": -0.259234,
+          "max_drawdown_pct": 0.399604,
+          "calmar": -0.3879,
+          "sortino": -0.3167,
+          "avg_invested_pct": 0.1686,
+          "n_sells": 13
+        },
+        {
+          "label": "va96_6|glide12|monthly|1shot",
+          "total_return": -0.046047,
+          "max_drawdown_pct": 0.064272,
+          "calmar": -0.4062,
+          "sortino": -0.5831,
+          "avg_invested_pct": 0.0254,
+          "n_sells": 12
+        },
+        {
+          "label": "dipB|maexit200|monthly|1shot",
+          "total_return": -0.272491,
+          "max_drawdown_pct": 0.399604,
+          "calmar": -0.4092,
+          "sortino": -0.333,
+          "avg_invested_pct": 0.1607,
+          "n_sells": 1
+        },
+        {
+          "label": "dipB|maexit200|monthly|rot",
+          "total_return": -0.272491,
+          "max_drawdown_pct": 0.399604,
+          "calmar": -0.4092,
+          "sortino": -0.333,
+          "avg_invested_pct": 0.1607,
+          "n_sells": 1
+        },
+        {
+          "label": "dipB|maexit200b|monthly|1shot",
+          "total_return": -0.272491,
+          "max_drawdown_pct": 0.399604,
+          "calmar": -0.4092,
+          "sortino": -0.333,
+          "avg_invested_pct": 0.1607,
+          "n_sells": 1
+        }
+      ],
+      "best_hold": {
+        "label": "va96_6|hold|monthly|1shot",
+        "total_return": -0.216953,
+        "max_drawdown_pct": 0.291599,
+        "calmar": -0.4398,
+        "sortino": -0.8559,
+        "avg_invested_pct": 0.1402,
+        "n_sells": 0
+      },
+      "best_exit": {
+        "label": "dipB|glide12|monthly|1shot",
+        "total_return": -0.259234,
+        "max_drawdown_pct": 0.399604,
+        "calmar": -0.3879,
+        "sortino": -0.3167,
+        "avg_invested_pct": 0.1686,
+        "n_sells": 13
+      },
+      "hold_beats_exit": false,
+      "family_best_hold": {
+        "value_avg": {
+          "label": "va96_6|hold|monthly|1shot",
+          "total_return": -0.216953,
+          "max_drawdown_pct": 0.291599,
+          "calmar": -0.4398,
+          "sortino": -0.8559,
+          "avg_invested_pct": 0.1402,
+          "n_sells": 0
+        },
+        "dca": {
+          "label": "dca96|hold|monthly|1shot",
+          "total_return": -0.134761,
+          "max_drawdown_pct": 0.157892,
+          "calmar": -0.4942,
+          "sortino": -1.2263,
+          "avg_invested_pct": 0.0734,
+          "n_sells": 0
+        },
+        "scaled": {
+          "label": "scaled_invvol|hold|monthly|1shot",
+          "total_return": -0.375482,
+          "max_drawdown_pct": 0.429664,
+          "calmar": -0.5404,
+          "sortino": -1.1672,
+          "avg_invested_pct": 0.2375,
+          "n_sells": 0
+        },
+        "trend": {
+          "label": "trend200|hold|monthly|1shot",
+          "total_return": -0.358231,
+          "max_drawdown_pct": 0.383779,
+          "calmar": -0.5742,
+          "sortino": -1.2393,
+          "avg_invested_pct": 0.2392,
+          "n_sells": 0
+        },
+        "dip": {
+          "label": "dipB|hold|monthly|1shot",
+          "total_return": -0.758689,
+          "max_drawdown_pct": 0.822232,
+          "calmar": -0.6686,
+          "sortino": -0.6677,
+          "avg_invested_pct": 0.7175,
+          "n_sells": 0
+        },
+        "lump": {
+          "label": "lump|hold|monthly|1shot",
+          "total_return": -0.840142,
+          "max_drawdown_pct": 0.881899,
+          "calmar": -0.7287,
+          "sortino": -0.9126,
+          "avg_invested_pct": 1.0,
+          "n_sells": 0
+        }
+      },
+      "lump_hold": {
+        "label": "lump|hold|monthly|1shot",
+        "total_return": -0.840142,
+        "max_drawdown_pct": 0.881899,
+        "calmar": -0.7287,
+        "sortino": -0.9126,
+        "avg_invested_pct": 1.0,
+        "n_sells": 0
+      },
+      "dca_hold": {
+        "label": "dca48|hold|monthly|1shot",
+        "total_return": -0.269523,
+        "max_drawdown_pct": 0.315449,
+        "calmar": -0.5123,
+        "sortino": -1.1592,
+        "avg_invested_pct": 0.1577,
+        "n_sells": 0
+      }
+    },
+    {
+      "key": "two_lost_decades",
+      "label": "二つの失われた10年 1990-2013",
+      "kind": "adverse",
+      "start": "1990-01-04",
+      "end": "2013-12-30",
+      "n_days": 5903,
+      "n_months": 288,
+      "n225_total_return": -0.5791759737175644,
+      "top5": [
+        {
+          "label": "trend100|volx45|monthly|rot",
+          "total_return": 0.032781,
+          "max_drawdown_pct": 0.03414,
+          "calmar": 0.0404,
+          "sortino": 0.1316,
+          "avg_invested_pct": 0.0088,
+          "n_sells": 71
+        },
+        {
+          "label": "scaled_rsi|volx45|monthly|rot",
+          "total_return": 0.023094,
+          "max_drawdown_pct": 0.033137,
+          "calmar": 0.0294,
+          "sortino": 0.1181,
+          "avg_invested_pct": 0.0081,
+          "n_sells": 167
+        },
+        {
+          "label": "scaled_invvol|volx45|monthly|rot",
+          "total_return": 0.020643,
+          "max_drawdown_pct": 0.029972,
+          "calmar": 0.0291,
+          "sortino": 0.1124,
+          "avg_invested_pct": 0.0069,
+          "n_sells": 167
+        },
+        {
+          "label": "dca96|volx45|monthly|rot",
+          "total_return": 0.06013,
+          "max_drawdown_pct": 0.103063,
+          "calmar": 0.0242,
+          "sortino": 0.1034,
+          "avg_invested_pct": 0.0251,
+          "n_sells": 167
+        },
+        {
+          "label": "dca48|volx45|monthly|rot",
+          "total_return": 0.120259,
+          "max_drawdown_pct": 0.206126,
+          "calmar": 0.0236,
+          "sortino": 0.1072,
+          "avg_invested_pct": 0.0521,
+          "n_sells": 167
+        }
+      ],
+      "best_hold": {
+        "label": "trend200|hold|monthly|1shot",
+        "total_return": 0.13031,
+        "max_drawdown_pct": 0.724112,
+        "calmar": 0.0072,
+        "sortino": 0.1301,
+        "avg_invested_pct": 0.3797,
+        "n_sells": 0
+      },
+      "best_exit": {
+        "label": "trend100|volx45|monthly|rot",
+        "total_return": 0.032781,
+        "max_drawdown_pct": 0.03414,
+        "calmar": 0.0404,
+        "sortino": 0.1316,
+        "avg_invested_pct": 0.0088,
+        "n_sells": 71
+      },
+      "hold_beats_exit": false,
+      "family_best_hold": {
+        "trend": {
+          "label": "trend200|hold|monthly|1shot",
+          "total_return": 0.13031,
+          "max_drawdown_pct": 0.724112,
+          "calmar": 0.0072,
+          "sortino": 0.1301,
+          "avg_invested_pct": 0.3797,
+          "n_sells": 0
+        },
+        "scaled": {
+          "label": "scaled_invvol|hold|monthly|1shot",
+          "total_return": 0.046791,
+          "max_drawdown_pct": 0.53165,
+          "calmar": 0.0037,
+          "sortino": 0.0774,
+          "avg_invested_pct": 0.2302,
+          "n_sells": 0
+        },
+        "dca": {
+          "label": "dca96|hold|monthly|1shot",
+          "total_return": -0.711987,
+          "max_drawdown_pct": 0.942125,
+          "calmar": -0.0549,
+          "sortino": 0.0912,
+          "avg_invested_pct": 0.8153,
+          "n_sells": 0
+        },
+        "value_avg": {
+          "label": "va96_6|hold|monthly|1shot",
+          "total_return": -0.723408,
+          "max_drawdown_pct": 0.946036,
+          "calmar": -0.0564,
+          "sortino": 0.104,
+          "avg_invested_pct": 0.8939,
+          "n_sells": 0
+        },
+        "dip": {
+          "label": "dipB|hold|monthly|1shot",
+          "total_return": -0.909619,
+          "max_drawdown_pct": 0.983894,
+          "calmar": -0.0991,
+          "sortino": 0.0359,
+          "avg_invested_pct": 0.9911,
+          "n_sells": 0
+        },
+        "lump": {
+          "label": "lump|hold|monthly|1shot",
+          "total_return": -0.948682,
+          "max_drawdown_pct": 0.988738,
+          "calmar": -0.1204,
+          "sortino": -0.0099,
+          "avg_invested_pct": 1.0,
+          "n_sells": 0
+        }
+      },
+      "lump_hold": {
+        "label": "lump|hold|monthly|1shot",
+        "total_return": -0.948682,
+        "max_drawdown_pct": 0.988738,
+        "calmar": -0.1204,
+        "sortino": -0.0099,
+        "avg_invested_pct": 1.0,
+        "n_sells": 0
+      },
+      "dca_hold": {
+        "label": "dca48|hold|monthly|1shot",
+        "total_return": -0.77465,
+        "max_drawdown_pct": 0.950576,
+        "calmar": -0.0648,
+        "sortino": 0.0864,
+        "avg_invested_pct": 0.9056,
+        "n_sells": 0
+      }
+    },
+    {
+      "key": "bull_real",
+      "label": "強気ベースライン 2014-2026（実era）",
+      "kind": "baseline",
+      "start": "2014-01-06",
+      "end": "2026-06-05",
+      "n_days": 3034,
+      "n_months": 150,
+      "n225_total_return": 3.1855943144960133,
+      "top5": [
+        {
+          "label": "va48_0|hold|monthly|1shot",
+          "total_return": 10.533679,
+          "max_drawdown_pct": 0.480456,
+          "calmar": 0.4687,
+          "sortino": 0.7461,
+          "avg_invested_pct": 0.7938,
+          "n_sells": 0
+        },
+        {
+          "label": "va96_6|hold|monthly|1shot",
+          "total_return": 9.976778,
+          "max_drawdown_pct": 0.487071,
+          "calmar": 0.452,
+          "sortino": 0.7549,
+          "avg_invested_pct": 0.7224,
+          "n_sells": 0
+        },
+        {
+          "label": "dipA|hold|monthly|1shot",
+          "total_return": 12.790512,
+          "max_drawdown_pct": 0.545976,
+          "calmar": 0.446,
+          "sortino": 0.7236,
+          "avg_invested_pct": 0.952,
+          "n_sells": 0
+        },
+        {
+          "label": "dipB|hold|monthly|1shot",
+          "total_return": 12.035486,
+          "max_drawdown_pct": 0.545976,
+          "calmar": 0.4354,
+          "sortino": 0.7261,
+          "avg_invested_pct": 0.9055,
+          "n_sells": 0
+        },
+        {
+          "label": "lump|hold|monthly|1shot",
+          "total_return": 11.92802,
+          "max_drawdown_pct": 0.545976,
+          "calmar": 0.4338,
+          "sortino": 0.7015,
+          "avg_invested_pct": 1.0,
+          "n_sells": 0
+        }
+      ],
+      "best_hold": {
+        "label": "va48_0|hold|monthly|1shot",
+        "total_return": 10.533679,
+        "max_drawdown_pct": 0.480456,
+        "calmar": 0.4687,
+        "sortino": 0.7461,
+        "avg_invested_pct": 0.7938,
+        "n_sells": 0
+      },
+      "best_exit": {
+        "label": "dipB|tp100|monthly|1shot",
+        "total_return": 0.33406,
+        "max_drawdown_pct": 0.08195,
+        "calmar": 0.2957,
+        "sortino": 0.1798,
+        "avg_invested_pct": 0.0438,
+        "n_sells": 1
+      },
+      "hold_beats_exit": true,
+      "family_best_hold": {
+        "value_avg": {
+          "label": "va48_0|hold|monthly|1shot",
+          "total_return": 10.533679,
+          "max_drawdown_pct": 0.480456,
+          "calmar": 0.4687,
+          "sortino": 0.7461,
+          "avg_invested_pct": 0.7938,
+          "n_sells": 0
+        },
+        "dip": {
+          "label": "dipA|hold|monthly|1shot",
+          "total_return": 12.790512,
+          "max_drawdown_pct": 0.545976,
+          "calmar": 0.446,
+          "sortino": 0.7236,
+          "avg_invested_pct": 0.952,
+          "n_sells": 0
+        },
+        "lump": {
+          "label": "lump|hold|monthly|1shot",
+          "total_return": 11.92802,
+          "max_drawdown_pct": 0.545976,
+          "calmar": 0.4338,
+          "sortino": 0.7015,
+          "avg_invested_pct": 1.0,
+          "n_sells": 0
+        },
+        "dca": {
+          "label": "dca24|hold|monthly|1shot",
+          "total_return": 10.623317,
+          "max_drawdown_pct": 0.545976,
+          "calmar": 0.4139,
+          "sortino": 0.6942,
+          "avg_invested_pct": 0.928,
+          "n_sells": 0
+        },
+        "scaled": {
+          "label": "scaled_rsi|hold|monthly|1shot",
+          "total_return": 6.131862,
+          "max_drawdown_pct": 0.470975,
+          "calmar": 0.3763,
+          "sortino": 0.7142,
+          "avg_invested_pct": 0.5664,
+          "n_sells": 0
+        },
+        "trend": {
+          "label": "trend100|hold|monthly|1shot",
+          "total_return": 5.836787,
+          "max_drawdown_pct": 0.467778,
+          "calmar": 0.3701,
+          "sortino": 0.7055,
+          "avg_invested_pct": 0.5605,
+          "n_sells": 0
+        }
+      },
+      "lump_hold": {
+        "label": "lump|hold|monthly|1shot",
+        "total_return": 11.92802,
+        "max_drawdown_pct": 0.545976,
+        "calmar": 0.4338,
+        "sortino": 0.7015,
+        "avg_invested_pct": 1.0,
+        "n_sells": 0
+      },
+      "dca_hold": {
+        "label": "dca48|hold|monthly|1shot",
+        "total_return": 10.148418,
+        "max_drawdown_pct": 0.545976,
+        "calmar": 0.4061,
+        "sortino": 0.7139,
+        "avg_invested_pct": 0.8496,
+        "n_sells": 0
+      }
+    }
+  ]
+}

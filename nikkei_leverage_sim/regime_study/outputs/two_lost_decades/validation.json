@@ -1,0 +1,283 @@
+{
+  "config": {
+    "n_boot": 400,
+    "block": 21,
+    "n_perm": 400,
+    "seed": 42,
+    "cost_bps": 20.0,
+    "panel_size": 13
+  },
+  "bootstrap_calmar_ci": {
+    "trend100|volx45|monthly|rot": {
+      "observed": 0.040361585994477374,
+      "ci_low": -0.04017460564848666,
+      "ci_high": 0.1150745704690621,
+      "median": -0.013915556216575725
+    },
+    "scaled_rsi|volx45|monthly|rot": {
+      "observed": 0.029427131992140684,
+      "ci_low": -0.04069283419888165,
+      "ci_high": 0.12479999959719991,
+      "median": -0.017790078470331205
+    },
+    "scaled_invvol|volx45|monthly|rot": {
+      "observed": 0.029115802511207423,
+      "ci_low": -0.040517358523154356,
+      "ci_high": 0.11983414022909221,
+      "median": -0.0180261431926828
+    },
+    "dca96|volx45|monthly|rot": {
+      "observed": 0.024216587832575187,
+      "ci_low": -0.04179574420762561,
+      "ci_high": 0.12117953800612528,
+      "median": -0.01832104614981866
+    },
+    "dca48|volx45|monthly|rot": {
+      "observed": 0.023576169962788544,
+      "ci_low": -0.04381280601897237,
+      "ci_high": 0.12272777853738996,
+      "median": -0.018561710681117435
+    },
+    "dca24|volx45|monthly|rot": {
+      "observed": 0.02090743597543777,
+      "ci_low": -0.04916719822564818,
+      "ci_high": 0.1269987311894065,
+      "median": -0.019805206783725215
+    },
+    "va96_6|volx45|monthly|rot": {
+      "observed": 0.02045611053001587,
+      "ci_low": -0.041522988451114726,
+      "ci_high": 0.13015825273854897,
+      "median": -0.017928547842949394
+    },
+    "va48_0|volx45|monthly|rot": {
+      "observed": 0.01810661515011972,
+      "ci_low": -0.043759990143718855,
+      "ci_high": 0.12730152084401902,
+      "median": -0.01839213285497235
+    },
+    "trend200|hold|monthly|1shot": {
+      "observed": 0.007240444573380648,
+      "ci_low": -0.09628834505767439,
+      "ci_high": 0.07337270473834687,
+      "median": -0.05006284399379313
+    },
+    "trend200|tp50|monthly|1shot": {
+      "observed": 0.007240444573380648,
+      "ci_low": -0.0863670981010802,
+      "ci_high": 0.2245708798472128,
+      "median": 0.05447721095259389
+    },
+    "lump|hold|monthly|1shot": {
+      "observed": -0.12042642283268769,
+      "ci_low": -0.26125476563835714,
+      "ci_high": 0.054195015232847296,
+      "median": -0.12448732385670985
+    },
+    "dca48|hold|monthly|1shot": {
+      "observed": -0.06483605604853299,
+      "ci_low": -0.24974137314972783,
+      "ci_high": 0.0664775008762229,
+      "median": -0.11382278645170191
+    },
+    "mom252|momexit|monthly|rot": {
+      "observed": -0.05267730312162343,
+      "ci_low": -0.13636695020010328,
+      "ci_high": 0.08430471423860818,
+      "median": -0.06022183777044994
+    }
+  },
+  "pairwise": [
+    {
+      "a": "trend200|hold|monthly|1shot",
+      "b": "lump|hold|monthly|1shot",
+      "obs_diff": 0.12766686740606834,
+      "ci_low": -0.028900431354362984,
+      "ci_high": 0.19447808005584677,
+      "p_a_not_gt_b": 0.0725
+    },
+    {
+      "a": "trend200|hold|monthly|1shot",
+      "b": "dca48|hold|monthly|1shot",
+      "obs_diff": 0.07207650062191363,
+      "ci_low": -0.02579424861837616,
+      "ci_high": 0.18090633826784072,
+      "p_a_not_gt_b": 0.0825
+    },
+    {
+      "a": "trend200|hold|monthly|1shot",
+      "b": "trend100|volx45|monthly|rot",
+      "obs_diff": -0.03312114142109673,
+      "ci_low": -0.14839164620608422,
+      "ci_high": 0.07437057916856497,
+      "p_a_not_gt_b": 0.8075
+    },
+    {
+      "a": "lump|hold|monthly|1shot",
+      "b": "trend100|volx45|monthly|rot",
+      "obs_diff": -0.16078800882716507,
+      "ci_low": -0.27285012441628803,
+      "ci_high": 0.03352879554084853,
+      "p_a_not_gt_b": 0.94
+    }
+  ],
+  "permutation_fdr": {
+    "dca24|volx45|monthly|rot": {
+      "p_value": 0.3092269326683292,
+      "reject_fdr05": false
+    },
+    "dca48|hold|monthly|1shot": {
+      "p_value": 0.02493765586034913,
+      "reject_fdr05": false
+    },
+    "dca48|volx45|monthly|rot": {
+      "p_value": 0.29177057356608477,
+      "reject_fdr05": false
+    },
+    "dca96|volx45|monthly|rot": {
+      "p_value": 0.24688279301745636,
+      "reject_fdr05": false
+    },
+    "lump|hold|monthly|1shot": {
+      "p_value": 0.34663341645885287,
+      "reject_fdr05": false
+    },
+    "mom252|momexit|monthly|rot": {
+      "p_value": 0.41895261845386533,
+      "reject_fdr05": false
+    },
+    "scaled_invvol|volx45|monthly|rot": {
+      "p_value": 0.26683291770573564,
+      "reject_fdr05": false
+    },
+    "scaled_rsi|volx45|monthly|rot": {
+      "p_value": 0.24438902743142144,
+      "reject_fdr05": false
+    },
+    "trend100|volx45|monthly|rot": {
+      "p_value": 0.18703241895261846,
+      "reject_fdr05": false
+    },
+    "trend200|hold|monthly|1shot": {
+      "p_value": 0.06234413965087282,
+      "reject_fdr05": false
+    },
+    "trend200|tp50|monthly|1shot": {
+      "p_value": 0.9351620947630923,
+      "reject_fdr05": false
+    },
+    "va48_0|volx45|monthly|rot": {
+      "p_value": 0.314214463840399,
+      "reject_fdr05": false
+    },
+    "va96_6|volx45|monthly|rot": {
+      "p_value": 0.27680798004987534,
+      "reject_fdr05": false
+    }
+  },
+  "out_of_sample": {
+    "split_date": "2001-12-17",
+    "in_sample_winner": "dipB|trail15|monthly|1shot",
+    "in_sample_calmar": 0.010934232474830255,
+    "winner_oos_calmar": -0.019192579969335634,
+    "winner_oos_rank": 128,
+    "n_plans": 205,
+    "oos_top5": [
+      [
+        "scaled_invvol|tp100|monthly|1shot",
+        0.45478424721301886
+      ],
+      [
+        "scaled_invvol|tp100|monthly|rot",
+        0.45478424721301886
+      ],
+      [
+        "trend200|tp100|monthly|1shot",
+        0.3855739166610964
+      ],
+      [
+        "trend200|tp100|monthly|rot",
+        0.3855739166610964
+      ],
+      [
+        "dca96|tp100|monthly|1shot",
+        0.34929646836438827
+      ]
+    ],
+    "in_top5": [
+      [
+        "dipB|trail15|monthly|1shot",
+        0.010934232474830255
+      ],
+      [
+        "dipB|trail15|monthly|rot",
+        0.010934232474830255
+      ],
+      [
+        "va96_6|maexit200|monthly|1shot",
+        -0.022138185421042404
+      ],
+      [
+        "va96_6|maexit200|monthly|rot",
+        -0.022138185421042404
+      ],
+      [
+        "va96_6|maexit200b|monthly|1shot",
+        -0.022138185421042404
+      ]
+    ]
+  },
+  "cost_sensitivity": {
+    "cost_bps": 20.0,
+    "top5_no_cost": [
+      [
+        "trend100|volx45|monthly|rot",
+        0.040361585994477374
+      ],
+      [
+        "scaled_rsi|volx45|monthly|rot",
+        0.029427131992140684
+      ],
+      [
+        "scaled_invvol|volx45|monthly|rot",
+        0.029115802511207423
+      ],
+      [
+        "dca96|volx45|monthly|rot",
+        0.024216587832575187
+      ],
+      [
+        "dca48|volx45|monthly|rot",
+        0.023576169962788544
+      ]
+    ],
+    "top5_with_cost": [
+      [
+        "trend100|volx45|monthly|rot",
+        0.03447022230746915
+      ],
+      [
+        "scaled_invvol|volx45|monthly|rot",
+        0.02398112654760068
+      ],
+      [
+        "scaled_rsi|volx45|monthly|rot",
+        0.02199302433333797
+      ],
+      [
+        "dca96|volx45|monthly|rot",
+        0.018192873519200802
+      ],
+      [
+        "dca48|volx45|monthly|rot",
+        0.017802439138694358
+      ]
+    ]
+  },
+  "regime": {
+    "key": "two_lost_decades",
+    "label": "二つの失われた10年 1990-2013",
+    "start": "1990-01-04",
+    "end": "2013-12-30"
+  }
+}
