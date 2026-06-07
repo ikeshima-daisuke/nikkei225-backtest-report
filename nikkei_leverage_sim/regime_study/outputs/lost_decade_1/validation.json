@@ -1,0 +1,275 @@
+{
+  "config": {
+    "n_boot": 400,
+    "block": 21,
+    "n_perm": 400,
+    "seed": 42,
+    "cost_bps": 20.0,
+    "panel_size": 13
+  },
+  "bootstrap_calmar_ci": {
+    "dipB|trail15|monthly|1shot": {
+      "observed": 0.00982157427169068,
+      "ci_low": -0.08313589602133419,
+      "ci_high": 0.1416732090192721,
+      "median": -0.05004123067840958
+    },
+    "dipB|trail15|monthly|rot": {
+      "observed": 0.00982157427169068,
+      "ci_low": -0.08313589602133419,
+      "ci_high": 0.1416732090192721,
+      "median": -0.05004123067840958
+    },
+    "va96_6|maexit200|monthly|1shot": {
+      "observed": -0.019889031168266035,
+      "ci_low": -0.07404669682784037,
+      "ci_high": 0.08757114895704383,
+      "median": -0.02368456650928105
+    },
+    "va96_6|maexit200|monthly|rot": {
+      "observed": -0.019889031168266035,
+      "ci_low": -0.07404669682784037,
+      "ci_high": 0.08757114895704383,
+      "median": -0.02368456650928105
+    },
+    "va96_6|maexit200b|monthly|1shot": {
+      "observed": -0.019889031168266035,
+      "ci_low": -0.07404669682784037,
+      "ci_high": 0.07445426897808519,
+      "median": -0.02379891418422867
+    },
+    "va96_6|maexit200b|monthly|rot": {
+      "observed": -0.019889031168266035,
+      "ci_low": -0.07404669682784037,
+      "ci_high": 0.07445426897808519,
+      "median": -0.02379891418422867
+    },
+    "va48_0|maexit200|monthly|1shot": {
+      "observed": -0.020721699124515186,
+      "ci_low": -0.07517352326648412,
+      "ci_high": 0.09812424744493956,
+      "median": -0.023922924271871274
+    },
+    "va48_0|maexit200|monthly|rot": {
+      "observed": -0.020721699124515186,
+      "ci_low": -0.07517352326648412,
+      "ci_high": 0.09812424744493956,
+      "median": -0.023922924271871274
+    },
+    "va48_0|maexit200b|monthly|1shot": {
+      "observed": -0.020721699124515186,
+      "ci_low": -0.07517352326648412,
+      "ci_high": 0.0828845098701121,
+      "median": -0.024092975379644693
+    },
+    "va48_0|maexit200b|monthly|rot": {
+      "observed": -0.020721699124515186,
+      "ci_low": -0.07517352326648412,
+      "ci_high": 0.0828845098701121,
+      "median": -0.024092975379644693
+    },
+    "lump|hold|monthly|1shot": {
+      "observed": -0.26817183764160946,
+      "ci_low": -0.41959421629599897,
+      "ci_high": -0.06224795942016463,
+      "median": -0.2616443051829954
+    },
+    "dca48|hold|monthly|1shot": {
+      "observed": -0.18952623801034638,
+      "ci_low": -0.3781400143674015,
+      "ci_high": -0.040114889886198817,
+      "median": -0.22118899157747957
+    },
+    "mom252|momexit|monthly|rot": {
+      "observed": -0.17872614392755795,
+      "ci_low": -0.1780361265555367,
+      "ci_high": 0.026720637582902038,
+      "median": -0.10875961699724396
+    }
+  },
+  "pairwise": [
+    {
+      "a": "dca48|hold|monthly|1shot",
+      "b": "lump|hold|monthly|1shot",
+      "obs_diff": 0.07864559963126308,
+      "ci_low": -0.02024554441863446,
+      "ci_high": 0.1104008473535958,
+      "p_a_not_gt_b": 0.12
+    },
+    {
+      "a": "dca48|hold|monthly|1shot",
+      "b": "dipB|trail15|monthly|1shot",
+      "obs_diff": -0.19934781228203705,
+      "ci_low": -0.38630202292917776,
+      "ci_high": 0.0007350322660111744,
+      "p_a_not_gt_b": 0.9725
+    },
+    {
+      "a": "lump|hold|monthly|1shot",
+      "b": "dipB|trail15|monthly|1shot",
+      "obs_diff": -0.2779934119133001,
+      "ci_low": -0.4136235024446777,
+      "ci_high": -0.0339578618175711,
+      "p_a_not_gt_b": 0.9875
+    }
+  ],
+  "permutation_fdr": {
+    "dca48|hold|monthly|1shot": {
+      "p_value": 0.12967581047381546,
+      "reject_fdr05": false
+    },
+    "dipB|trail15|monthly|1shot": {
+      "p_value": 0.18453865336658354,
+      "reject_fdr05": false
+    },
+    "dipB|trail15|monthly|rot": {
+      "p_value": 0.16957605985037408,
+      "reject_fdr05": false
+    },
+    "lump|hold|monthly|1shot": {
+      "p_value": 0.9850374064837906,
+      "reject_fdr05": false
+    },
+    "mom252|momexit|monthly|rot": {
+      "p_value": 0.9451371571072319,
+      "reject_fdr05": false
+    },
+    "va48_0|maexit200b|monthly|1shot": {
+      "p_value": 0.44389027431421446,
+      "reject_fdr05": false
+    },
+    "va48_0|maexit200b|monthly|rot": {
+      "p_value": 0.5062344139650873,
+      "reject_fdr05": false
+    },
+    "va48_0|maexit200|monthly|1shot": {
+      "p_value": 0.5012468827930174,
+      "reject_fdr05": false
+    },
+    "va48_0|maexit200|monthly|rot": {
+      "p_value": 0.4937655860349127,
+      "reject_fdr05": false
+    },
+    "va96_6|maexit200b|monthly|1shot": {
+      "p_value": 0.4613466334164589,
+      "reject_fdr05": false
+    },
+    "va96_6|maexit200b|monthly|rot": {
+      "p_value": 0.5062344139650873,
+      "reject_fdr05": false
+    },
+    "va96_6|maexit200|monthly|1shot": {
+      "p_value": 0.4463840399002494,
+      "reject_fdr05": false
+    },
+    "va96_6|maexit200|monthly|rot": {
+      "p_value": 0.46633416458852867,
+      "reject_fdr05": false
+    }
+  },
+  "out_of_sample": {
+    "split_date": "1996-08-26",
+    "in_sample_winner": "dipB|trail15|monthly|1shot",
+    "in_sample_calmar": 0.019665551857412724,
+    "winner_oos_calmar": -0.04500782680676949,
+    "winner_oos_rank": 37,
+    "n_plans": 205,
+    "oos_top5": [
+      [
+        "va96_6|tp50|monthly|1shot",
+        0.1871010081372084
+      ],
+      [
+        "va96_6|tp50|monthly|rot",
+        0.1871010081372084
+      ],
+      [
+        "va48_0|tp50|monthly|1shot",
+        0.1736442896735979
+      ],
+      [
+        "va48_0|tp50|monthly|rot",
+        0.1736442896735979
+      ],
+      [
+        "dipA|maexit200|monthly|1shot",
+        0.10875230711216574
+      ]
+    ],
+    "in_top5": [
+      [
+        "dipB|trail15|monthly|1shot",
+        0.019665551857412724
+      ],
+      [
+        "dipB|trail15|monthly|rot",
+        0.019665551857412724
+      ],
+      [
+        "va96_6|hold|monthly|1shot",
+        -0.0040784995877251205
+      ],
+      [
+        "va96_6|tp50|monthly|1shot",
+        -0.0040784995877251205
+      ],
+      [
+        "va96_6|tp50|monthly|rot",
+        -0.0040784995877251205
+      ]
+    ]
+  },
+  "cost_sensitivity": {
+    "cost_bps": 20.0,
+    "top5_no_cost": [
+      [
+        "dipB|trail15|monthly|1shot",
+        0.00982157427169068
+      ],
+      [
+        "dipB|trail15|monthly|rot",
+        0.00982157427169068
+      ],
+      [
+        "va96_6|maexit200|monthly|1shot",
+        -0.019889031168266035
+      ],
+      [
+        "va96_6|maexit200|monthly|rot",
+        -0.019889031168266035
+      ],
+      [
+        "va96_6|maexit200b|monthly|1shot",
+        -0.019889031168266035
+      ]
+    ],
+    "top5_with_cost": [
+      [
+        "dipB|trail15|monthly|1shot",
+        0.007935480363405974
+      ],
+      [
+        "dipB|trail15|monthly|rot",
+        0.007935480363405974
+      ],
+      [
+        "va96_6|maexit200|monthly|1shot",
+        -0.020520834034493403
+      ],
+      [
+        "va96_6|maexit200|monthly|rot",
+        -0.020520834034493403
+      ],
+      [
+        "va96_6|maexit200b|monthly|1shot",
+        -0.020520834034493403
+      ]
+    ]
+  },
+  "regime": {
+    "key": "lost_decade_1",
+    "label": "失われた10年→2003大底",
+    "start": "1990-01-04",
+    "end": "2003-04-30"
+  }
+}

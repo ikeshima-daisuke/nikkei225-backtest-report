@@ -1,0 +1,273 @@
+{
+  "config": {
+    "n_boot": 400,
+    "block": 21,
+    "n_perm": 400,
+    "seed": 42,
+    "cost_bps": 20.0,
+    "panel_size": 12
+  },
+  "bootstrap_calmar_ci": {
+    "va48_0|hold|monthly|1shot": {
+      "observed": 0.4687138320404023,
+      "ci_low": 0.007798725166892037,
+      "ci_high": 1.0015270724459149,
+      "median": 0.3541777075019168
+    },
+    "va96_6|hold|monthly|1shot": {
+      "observed": 0.4520294134151447,
+      "ci_low": 0.013729539791934007,
+      "ci_high": 0.9129462017587543,
+      "median": 0.3332131532630678
+    },
+    "dipA|hold|monthly|1shot": {
+      "observed": 0.44602264095888083,
+      "ci_low": 0.00580362868363789,
+      "ci_high": 1.1062983381056328,
+      "median": 0.38885122564034413
+    },
+    "dipB|hold|monthly|1shot": {
+      "observed": 0.4353959366794891,
+      "ci_low": -0.0014088265432537963,
+      "ci_high": 1.051492186881503,
+      "median": 0.3839116282053902
+    },
+    "lump|hold|monthly|1shot": {
+      "observed": 0.43383773764250416,
+      "ci_low": 0.013282400451736507,
+      "ci_high": 1.117832698653738,
+      "median": 0.3973822357973448
+    },
+    "dca24|hold|monthly|1shot": {
+      "observed": 0.4139084444082474,
+      "ci_low": 0.0017527622595837056,
+      "ci_high": 1.1028673534972828,
+      "median": 0.3860266218187548
+    },
+    "dca96|hold|monthly|1shot": {
+      "observed": 0.4110335637224898,
+      "ci_low": -0.01557641358101041,
+      "ci_high": 0.9682629490568511,
+      "median": 0.31558319697094445
+    },
+    "dca48|hold|monthly|1shot": {
+      "observed": 0.4061416540615604,
+      "ci_low": 0.0013876029650305092,
+      "ci_high": 1.0194260210261457,
+      "median": 0.35868842873419937
+    },
+    "scaled_rsi|hold|monthly|1shot": {
+      "observed": 0.3763310774049312,
+      "ci_low": -0.01374233034016806,
+      "ci_high": 0.8982944654160355,
+      "median": 0.294057557869569
+    },
+    "trend100|hold|monthly|1shot": {
+      "observed": 0.3700858001322723,
+      "ci_low": -0.01651859644078555,
+      "ci_high": 0.9019688585036173,
+      "median": 0.28433526730434977
+    },
+    "mom252|momexit|monthly|rot": {
+      "observed": 0.23237799689396513,
+      "ci_low": -0.07006062895408174,
+      "ci_high": 0.9834904965808285,
+      "median": 0.23398324410412416
+    },
+    "dipB|tp100|monthly|1shot": {
+      "observed": 0.2956505478389351,
+      "ci_low": 0.07548436710550048,
+      "ci_high": 0.4789995133943621,
+      "median": 0.19761342890456257
+    }
+  },
+  "pairwise": [
+    {
+      "a": "va48_0|hold|monthly|1shot",
+      "b": "lump|hold|monthly|1shot",
+      "obs_diff": 0.03487609439789813,
+      "ci_low": -0.2911251807295175,
+      "ci_high": 0.22399612263742916,
+      "p_a_not_gt_b": 0.68
+    },
+    {
+      "a": "va48_0|hold|monthly|1shot",
+      "b": "dca48|hold|monthly|1shot",
+      "obs_diff": 0.0625721779788419,
+      "ci_low": -0.10427874161630067,
+      "ci_high": 0.0820253329005804,
+      "p_a_not_gt_b": 0.455
+    },
+    {
+      "a": "va48_0|hold|monthly|1shot",
+      "b": "dipB|tp100|monthly|1shot",
+      "obs_diff": 0.17306328420146722,
+      "ci_low": -0.2742627774279973,
+      "ci_high": 0.809382239093246,
+      "p_a_not_gt_b": 0.235
+    },
+    {
+      "a": "lump|hold|monthly|1shot",
+      "b": "dipB|tp100|monthly|1shot",
+      "obs_diff": 0.1381871898035691,
+      "ci_low": -0.22903144200930406,
+      "ci_high": 0.8737353262173844,
+      "p_a_not_gt_b": 0.2225
+    }
+  ],
+  "permutation_fdr": {
+    "dca24|hold|monthly|1shot": {
+      "p_value": 0.24688279301745636,
+      "reject_fdr05": false
+    },
+    "dca48|hold|monthly|1shot": {
+      "p_value": 0.256857855361596,
+      "reject_fdr05": false
+    },
+    "dca96|hold|monthly|1shot": {
+      "p_value": 0.2119700748129676,
+      "reject_fdr05": false
+    },
+    "dipA|hold|monthly|1shot": {
+      "p_value": 0.16458852867830423,
+      "reject_fdr05": false
+    },
+    "dipB|hold|monthly|1shot": {
+      "p_value": 0.23192019950124687,
+      "reject_fdr05": false
+    },
+    "dipB|tp100|monthly|1shot": {
+      "p_value": 0.24189526184538654,
+      "reject_fdr05": false
+    },
+    "lump|hold|monthly|1shot": {
+      "p_value": 0.17206982543640897,
+      "reject_fdr05": false
+    },
+    "mom252|momexit|monthly|rot": {
+      "p_value": 0.4488778054862843,
+      "reject_fdr05": false
+    },
+    "scaled_rsi|hold|monthly|1shot": {
+      "p_value": 0.22693266832917705,
+      "reject_fdr05": false
+    },
+    "trend100|hold|monthly|1shot": {
+      "p_value": 0.2194513715710723,
+      "reject_fdr05": false
+    },
+    "va48_0|hold|monthly|1shot": {
+      "p_value": 0.1371571072319202,
+      "reject_fdr05": false
+    },
+    "va96_6|hold|monthly|1shot": {
+      "p_value": 0.1745635910224439,
+      "reject_fdr05": false
+    }
+  },
+  "out_of_sample": {
+    "split_date": "2020-03-19",
+    "in_sample_winner": "dipB|tp100|monthly|1shot",
+    "in_sample_calmar": 0.5984642959619382,
+    "winner_oos_calmar": 0.8057206399314925,
+    "winner_oos_rank": 29,
+    "n_plans": 205,
+    "oos_top5": [
+      [
+        "trend200|tp50|monthly|1shot",
+        1.2664720851651963
+      ],
+      [
+        "trend200|tp50|monthly|rot",
+        1.2664720851651963
+      ],
+      [
+        "trend100|tp50|monthly|1shot",
+        1.2664720851651963
+      ],
+      [
+        "trend100|tp50|monthly|rot",
+        1.2664720851651963
+      ],
+      [
+        "dca96|tp50|monthly|1shot",
+        1.2642841271782899
+      ]
+    ],
+    "in_top5": [
+      [
+        "dipB|tp100|monthly|1shot",
+        0.5984642959619382
+      ],
+      [
+        "dipB|tp100|monthly|rot",
+        0.5984642959619382
+      ],
+      [
+        "dipA|tp100|monthly|1shot",
+        0.5871792217541567
+      ],
+      [
+        "dipA|tp100|monthly|rot",
+        0.5871792217541567
+      ],
+      [
+        "trend200|tp50|monthly|1shot",
+        0.5080112417273275
+      ]
+    ]
+  },
+  "cost_sensitivity": {
+    "cost_bps": 20.0,
+    "top5_no_cost": [
+      [
+        "va48_0|hold|monthly|1shot",
+        0.4687138320404023
+      ],
+      [
+        "va96_6|hold|monthly|1shot",
+        0.4520294134151447
+      ],
+      [
+        "dipA|hold|monthly|1shot",
+        0.44602264095888083
+      ],
+      [
+        "dipB|hold|monthly|1shot",
+        0.4353959366794891
+      ],
+      [
+        "lump|hold|monthly|1shot",
+        0.43383773764250416
+      ]
+    ],
+    "top5_with_cost": [
+      [
+        "va48_0|hold|monthly|1shot",
+        0.4684829557620217
+      ],
+      [
+        "va96_6|hold|monthly|1shot",
+        0.4515863461373961
+      ],
+      [
+        "dipA|hold|monthly|1shot",
+        0.4456439441744723
+      ],
+      [
+        "dipB|hold|monthly|1shot",
+        0.43501900679562405
+      ],
+      [
+        "lump|hold|monthly|1shot",
+        0.43383773764250405
+      ]
+    ]
+  },
+  "regime": {
+    "key": "bull_real",
+    "label": "強気ベースライン 2014-2026（実era）",
+    "start": "2014-01-06",
+    "end": "2026-06-05"
+  }
+}
